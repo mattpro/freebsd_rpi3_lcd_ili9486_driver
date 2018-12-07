@@ -1,4 +1,3 @@
-
 #include <sys/param.h>  
 #include <sys/module.h>
 #include <sys/kernel.h>
@@ -30,11 +29,11 @@
 #define TSTATE_STOPPING 1
 #define TSTATE_RUNNING  2
 
-#define LCD_LOCK(_sc) 			mtx_lock( &(_sc)->sc_mtx )
-#define LCD_UNLOCK(_sc) 		mtx_unlock( &(_sc)->sc_mtx )
-#define LCD_LOCK_DESTROY(_sc) 		mtx_destroy( &(_sc)->sc_mtx )
-#define LCD_ASSERT_LOCKED(_sc)  	mtx_assert( &(_sc)->sc_mtx, MA_OWNED )
-#define LCD_ASSERT_UNLOCKED(_sc)	mtx_assert( &(_sc)->sc_mtx, MA_NOTOWNED)
+#define LCD_LOCK(_sc) 			mtx_lock( &(_sc)->mtx )
+#define LCD_UNLOCK(_sc) 		mtx_unlock( &(_sc)->mtx )
+#define LCD_LOCK_DESTROY(_sc) 		mtx_destroy( &(_sc)->mtx )
+#define LCD_ASSERT_LOCKED(_sc)  	mtx_assert( &(_sc)->mtx, MA_OWNED )
+#define LCD_ASSERT_UNLOCKED(_sc)	mtx_assert( &(_sc)->mtx, MA_NOTOWNED)
  
 
 struct lcd_sc_t 		*lcd_sc;
@@ -527,7 +526,25 @@ void LCD_init(void)
 }
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
-{
-    return 0;
+{   
+	LCD_LOCK(lcd_sc);
+
+	uint16_t color = 0;	
+	uint8_t buff[6];
+
+	uprintf("lcd write \n");	
+
+	copyin(uio->uio_iov->iov_base,
+			buff,
+			MIN( uio->uio_iov->iov_len, 6 ) );
+	
+	color = buff[0] | ( (uint16_t)buff[1] << 8 );
+	
+	uprintf("Set color to: %d\n", color );
+
+	LCD_fill( color  );
+
+    	LCD_UNLOCK(lcd_sc);    
+    	return 0;
 }
 
