@@ -255,38 +255,35 @@ void LCD_fill(uint16_t color)
 	struct spi_command spi_cmd;
 	
 	memset( lcdBuffer, color, LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH );
-//	int i;
-//	for( i = 0 ; i < 10000 ; i ++ )
-//	{
-//		lcdBuffer2[i] = (uint8_t)i;
-//	}
 
-
-	LCD_writeCommand(0x2B);
+	LCD_writeCommand(0x2A);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
-//	LCD_writeData(0x00);
-//	LCD_writeData(0x00);
 	LCD_writeData(0x01);
 	LCD_writeData(0x3F);
 
-	LCD_writeCommand(0x2A);
+	LCD_writeCommand(0x2B);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
 	LCD_writeData(0xE0);
 	
 	LCD_writeCommand(0x2C); // Memory write?
-//	LCD_writeCommand(0x3C); // Memory write continue
+
 	
     	memset(&spi_cmd, 0, sizeof(struct spi_command));
     	spi_cmd.tx_data =(uint8_t*) lcdBuffer;
     	spi_cmd.rx_data = NULL;
     	spi_cmd.rx_data_sz = 0;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
     	spi_cmd.tx_data_sz = 10000;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
-    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
-}
+	
+	int i;
+	for ( i = 0 ; i < 31  ; i ++ )
+	{
+    		SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 
+	}
+}
 void LCD_brightness(uint8_t brightness)
 {
 	// chyba trzeba wczesniej zainicjalizowac - rejestr 0x53
@@ -398,7 +395,7 @@ void LCD_init(void)
 //	LCD_writeCommand(0x2C); // Memory write?
 //	LCD_writeCommand(0x3C); // Memory write continue
 	
-//	LCD_setRotation(0);
+	LCD_setRotation(0);
 /*
 	int x;
 	int y;
@@ -414,9 +411,14 @@ void LCD_init(void)
 	DELAY(1000000);
 */
 	uprintf("Fill LCD test\n");
-	LCD_fill( setColor(0,0,0xFF) );
+	int u;
+	for ( u = 0 ; u < 10 ; u ++ )
+	{
+		LCD_fill( setColor(0xFF,0,    0	  ) );
+		LCD_fill( setColor(0,	0xFF, 0	  ) );
+		LCD_fill( setColor(0,   0,    0xFF) );
+	}
 
-	
 	
 	/*
 	uprintf("Test Spi multiple send \n");
