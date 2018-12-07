@@ -32,7 +32,7 @@ uint8_t lcdBuffer[320*480];
 
 /* Zmienne dotyczace LCD */
 volatile uint16_t LCD_HEIGHT = LCD_SCREEN_HEIGHT;
-volatile uint16_t LCD_WIDTH	 = LCD_SCREEN_WIDTH;
+volatile uint16_t LCD_WIDTH  = LCD_SCREEN_WIDTH;
 
 
 static device_method_t lcd_methods[] =
@@ -122,11 +122,16 @@ static int lcd_shutdown(device_t dev)
 void LCD_spiSendByte(uint8_t byte)
 {
     struct spi_command spi_cmd;
-    uint8_t temp;
+//    uint8_t txData[2];
+//    uint8_t rxData[2];
+
+//    txData[0] =0;
+//    txData[1] = byte;
+
     memset(&spi_cmd, 0, sizeof(struct spi_command));
     spi_cmd.tx_data = &byte;
-    spi_cmd.rx_data = &temp;
-    spi_cmd.rx_data_sz = 1;
+    spi_cmd.rx_data = NULL;
+    spi_cmd.rx_data_sz = 0;
     spi_cmd.tx_data_sz = 1;
     SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 }
@@ -150,6 +155,7 @@ void LCD_writeCommand(uint8_t command)
 {
 	PIN_RESET(LCD_DC);
 	LCD_spiSendByte(command);
+	PIN_SET(LCD_DC);
 }
 
 /* Send Data (char) to LCD */
@@ -182,28 +188,41 @@ void LCD_setRotation(uint8_t rotation)
 	{
 		case SCREEN_VERTICAL_1:
 			LCD_writeData(0x48);
-			LCD_WIDTH = 240;
-			LCD_HEIGHT = 320;
+			LCD_WIDTH = 320;
+			LCD_HEIGHT = 480;
 			break;
 		case SCREEN_HORIZONTAL_1:
 			LCD_writeData(0x28);
-			LCD_WIDTH  = 320;
-			LCD_HEIGHT = 240;
+			LCD_WIDTH  = 480;
+			LCD_HEIGHT = 320;
 			break;
 		case SCREEN_VERTICAL_2:
 			LCD_writeData(0x98);
-			LCD_WIDTH  = 240;
-			LCD_HEIGHT = 320;
+			LCD_WIDTH  = 320;
+			LCD_HEIGHT = 480;
 			break;
 		case SCREEN_HORIZONTAL_2:
 			LCD_writeData(0xF8);
-			LCD_WIDTH  = 320;
-			LCD_HEIGHT = 240;
+			LCD_WIDTH  = 480;
+			LCD_HEIGHT = 320;
 			break;
 		default:
 			//EXIT IF SCREEN ROTATION NOT VALID!
 			break;
 	}
+}
+
+uint16_t setColor(uint8_t r, uint8_t g, uint8_t b);
+
+uint16_t setColor(uint8_t r, uint8_t g, uint8_t b)
+{
+	uint16_t color;
+	
+	color  = MIN( (uint16_t)r, 0x1F ) << 11;
+	color |= MIN( (uint16_t)g, 0x3F ) << 5;
+	color |= MIN( (uint16_t)b, 0x1F );
+	
+	return color;
 }
 
 
@@ -212,16 +231,16 @@ void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour)
 	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
 	
 	LCD_writeCommand(0x2A); // Column Address Set
-	LCD_writeData( (uint8_t)(X >> 8));
-	LCD_writeData( (uint8_t)(X));
-	LCD_writeData( (uint8_t)((X+1) >> 8));
-	LCD_writeData( (uint8_t)(X+1) );
+	LCD_writeData( (uint8_t)( X >> 8 ) );
+	LCD_writeData( (uint8_t)( X ) );
+	LCD_writeData( (uint8_t)( X >> 8 ) );
+	LCD_writeData( (uint8_t)( X ) );
 
 	LCD_writeCommand(0x2B); // Page Address Set 		
-	LCD_writeData( (uint8_t)(Y >> 8) );
-	LCD_writeData( (uint8_t)(Y) );
-	LCD_writeData( (uint8_t)((Y+1) >> 8) );
-	LCD_writeData( (uint8_t)(Y+1) );
+	LCD_writeData( (uint8_t)( Y >> 8 ) );
+	LCD_writeData( (uint8_t)( Y ) );
+	LCD_writeData( (uint8_t)( Y >> 8 ) );
+	LCD_writeData( (uint8_t)( Y ) );
 
 	LCD_writeCommand(0x2C); // Memory write
 							
@@ -229,19 +248,29 @@ void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour)
 	LCD_writeData( (uint8_t)(Colour) );		
 }
 
+uint8_t lcdBuffer2[10000];
 
 void LCD_fill(uint16_t color)
 { 
 	struct spi_command spi_cmd;
 	
 	memset( lcdBuffer, color, LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH );
-	LCD_writeCommand(0x2A);
+	int i;
+	for( i = 0 ; i < 10000 ; i ++ )
+	{
+		lcdBuffer2[i] = (uint8_t)i;
+	}
+
+
+	LCD_writeCommand(0x2B);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
+//	LCD_writeData(0x00);
+//	LCD_writeData(0x00);
 	LCD_writeData(0x01);
 	LCD_writeData(0x3F);
 
-	LCD_writeCommand(0x2B);
+	LCD_writeCommand(0x2A);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
@@ -250,12 +279,12 @@ void LCD_fill(uint16_t color)
 	LCD_writeCommand(0x2C); // Memory write?
 //	LCD_writeCommand(0x3C); // Memory write continue
 	
-    memset(&spi_cmd, 0, sizeof(struct spi_command));
-    spi_cmd.tx_data = (uint8_t*)lcdBuffer;
-    spi_cmd.rx_data = NULL;
-    spi_cmd.rx_data_sz = LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
-    spi_cmd.tx_data_sz = LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
-    SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+    	memset(&spi_cmd, 0, sizeof(struct spi_command));
+    	spi_cmd.tx_data = lcdBuffer2;
+    	spi_cmd.rx_data = NULL;
+    	spi_cmd.rx_data_sz = 0;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
+    	spi_cmd.tx_data_sz = 10000;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
+    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 }
 
 void LCD_brightness(uint8_t brightness)
@@ -287,10 +316,10 @@ void LCD_init(void)
 	LCD_reset();
 
 
-	LCD_writeCommand(0x01); // Soft Reset
-	DELAY(15000);			// 15 ms wait
+//	LCD_writeCommand(0x01); // Soft Reset
+//	DELAY(150000);			// 15 ms wait
 
-	LCD_writeCommand(0x28); // Display OFF
+//	LCD_writeCommand(0x28); // Display OFF
 
 	LCD_writeCommand(0x3A); // Interface Pixel Format
 	LCD_writeData(0x55);	// 16 bit/pixel
@@ -300,9 +329,9 @@ void LCD_init(void)
 
 	LCD_writeCommand(0xC5); // VCOM Control
 	LCD_writeData(0x00);  // const
-	LCD_writeData(0x48);  // nVM ?
+	LCD_writeData(0x00);  // nVM ? 0x48
 	LCD_writeData(0x00);  // VCOM voltage ref
-	LCD_writeData(0x48);  // VCM out
+	LCD_writeData(0x00);  // VCM out
 
 	LCD_writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
 	LCD_writeData(0x0F);
@@ -341,23 +370,23 @@ void LCD_init(void)
 	LCD_writeCommand(0x11);	// Exit sleep - Sleep OUT
 	DELAY(120000);	 		// 120 ms wait
 
-
 	LCD_writeCommand(0x20); // Display Inversion OFF   RPi LCD (A)
-//  LCD_writeCommand(0x21); // Display Inversion ON    RPi LCD (B)
+	//LCD_writeCommand(0x21); // Display Inversion ON    RPi LCD (B)
 
-//	LCD_writeCommand(0x36); // Memory Access Control
+	LCD_writeCommand(0x36); // Memory Access Control
 	LCD_writeData(0x48);
 
 	LCD_writeCommand(0x29); // Display ON
 	DELAY(150000);
 
-	LCD_writeCommand(0x2A); // Column Address Set
+/*
+	LCD_writeCommand(0x2B); // Column Address Set
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
 	LCD_writeData(0x3F);
 
-	LCD_writeCommand(0x2B); // Row Address Set
+	LCD_writeCommand(0x2A); // Row Address Set
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
@@ -365,27 +394,27 @@ void LCD_init(void)
 
 
 	DELAY(120000);
-
+*/
 //	LCD_writeCommand(0x2C); // Memory write?
 //	LCD_writeCommand(0x3C); // Memory write continue
 	
-	LCD_setRotation(0);
+//	LCD_setRotation(0);
 
 	int x;
 	int y;
 	
 	uprintf("Write pixel test\n");
-	for ( x = 0 ; x < 320; x++ )
+	for ( x = 0 ; x < LCD_WIDTH ; x++ )
 	{	
-		for ( y = 0 ; y < 480 ; y ++ )
+		for ( y = 0 ; y < LCD_HEIGHT ; y ++ )
 		{
-			LCD_drawPixel(x, y, 0xFFFF);
+			LCD_drawPixel(x, y, setColor(0xFF,0,0));
 		}
 	} 
 	DELAY(1000000);
 	
 	uprintf("Fill LCD test\n");
-	LCD_fill(0x4312);
+	LCD_fill( setColor(0,0xFF,0) );
 
 	
 	
