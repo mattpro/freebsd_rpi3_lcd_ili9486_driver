@@ -1,3 +1,4 @@
+
 #include <sys/param.h>  
 #include <sys/module.h>
 #include <sys/kernel.h>
@@ -23,6 +24,17 @@
 #include "gpio_if.h"
 
 #include "lcd.h"
+
+
+#define TSTATE_STOPPED 	0
+#define TSTATE_STOPPING 1
+#define TSTATE_RUNNING  2
+
+#define LCD_LOCK(_sc) 			mtx_lock( &(_sc)->sc_mtx )
+#define LCD_UNLOCK(_sc) 		mtx_unlock( &(_sc)->sc_mtx )
+#define LCD_LOCK_DESTROY(_sc) 		mtx_destroy( &(_sc)->sc_mtx )
+#define LCD_ASSERT_LOCKED(_sc)  	mtx_assert( &(_sc)->sc_mtx, MA_OWNED )
+#define LCD_ASSERT_UNLOCKED(_sc)	mtx_assert( &(_sc)->sc_mtx, MA_NOTOWNED)
  
 
 struct lcd_sc_t 		*lcd_sc;
@@ -30,6 +42,8 @@ static devclass_t 		lcd_devclass;
 static d_write_t 		lcd_write;
 
 uint8_t lcdBuffer[320*480 + 10000];
+
+
 
 
 /* Zmienne dotyczace LCD */
@@ -83,8 +97,8 @@ static int lcd_probe(device_t dev)
 
 	rv = BUS_PROBE_DEFAULT;
 
-   	 uprintf("LCD Probe \n");
-  	device_set_desc(dev, "Lcd MattPro");
+	uprintf("LCD Probe \n");
+   	device_set_desc(dev, "Lcd MattPro");
   	return (rv); /* Only I can use this device. */
 }
 
@@ -102,24 +116,42 @@ void lcd_task( void *arg )
 
 } 
 
+static void lcd_delayed_attach(void *xsc);
 
-static int lcd_attach(device_t dev)
+
+static int lcd_attach(device_t dev )
 {
-    lcd_sc = device_get_softc(dev);
-    lcd_sc->dev = dev;
-    lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
-    if (lcd_sc->dev_gpio == NULL)
-    {
-		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
-		return (1);
-    }
-    mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
-    LCD_init();
+    struct lcd_sc_t *sc;
 
-    kproc_create( &lcd_task, lcd_sc, &lcd_sc->p, 0, 0, "task");
+    sc = device_get_softc(dev);
+    sc->dev = dev;	
+
+    LCD_LOCK_INIT(sc);
+
+    config_intrhook_oneshot( lcd_delayed_attach, sc );	
+	
+//    lcd_sc = device_get_softc(dev);
+//    lcd_sc->dev = dev;
+//    lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
+//    if (lcd_sc->dev_gpio == NULL)
+//   {
+//		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
+//		return (1);
+//    }
+//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->dev), "LCD Mutex", MTX_DEF);
+//    LCD_init();
+
+//    kproc_create( &lcd_task, lcd_sc, &lcd_sc->p, 0, 0, "task");
 
     return(0);
 }
+
+
+static void lcd_delayed_attach( void *xsc)
+{
+	uprintf("Delay attach");
+}
+
 
 static int lcd_detach(device_t dev)
 {
