@@ -40,7 +40,7 @@ struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
-uint8_t lcdBuffer[320*480 + 10000];
+uint16_t lcdBuffer[LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT];
 
 
 
@@ -304,13 +304,16 @@ void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour)
 	LCD_writeData( (uint8_t)(Colour) );		
 }
 
-//uint8_t lcdBuffer2[10000];
 
 void LCD_fill(uint16_t color)
 { 
 	struct spi_command spi_cmd;
-	
-	memset( lcdBuffer, color, LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH );
+	int i;	
+
+	for ( i = 0 ; i < LCD_WIDTH*LCD_HEIGHT ; i ++ )
+	{
+		lcdBuffer[i] = color;
+	}
 
 	LCD_writeCommand(0x2A);
 	LCD_writeData(0x00);
@@ -333,17 +336,18 @@ void LCD_fill(uint16_t color)
     	spi_cmd.rx_data_sz = 0;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
     	spi_cmd.tx_data_sz = 10240;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
 	
-	int i;
+	
 	for ( i = 0 ; i < 30  ; i ++ )
 	{	
 		spi_cmd.tx_data = (uint8_t*)&lcdBuffer[5120*i];
 		spi_cmd.rx_data = NULL;
-		spi_cmd.tx_data_sz =2* 5120;
+		spi_cmd.tx_data_sz = 2 * 5120;
 		spi_cmd.rx_data_sz = 0;
     		SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 
 	}
 }
+
 void LCD_brightness(uint8_t brightness)
 {
 	// chyba trzeba wczesniej zainicjalizowac - rejestr 0x53
@@ -461,22 +465,29 @@ void LCD_init(void)
 	int y;
 	
 	uprintf("Write pixel test\n");
-	for ( x = 0 ; x < LCD_WIDTH ; x++ )
+	for ( x = 0 ; x < 50 ; x++ )
 	{	
-		for ( y = 0 ; y < LCD_HEIGHT ; y ++ )
+		for ( y = 0 ; y < 50 ; y ++ )
 		{
 			LCD_drawPixel(x, y, setColor(0xFF,0,0));
+			LCD_drawPixel( x+50,y, setColor( 0, 0xFF, 0 ) );
+			LCD_drawPixel(x+100, y, setColor( 0, 0, 0xFF ) );
 		}
 	} 
 	DELAY(1000000);
 */
+
+
 	uprintf("Fill LCD test\n");
 	int u;
 	for ( u = 0 ; u < 10 ; u ++ )
 	{
-		LCD_fill( setColor(0xFF,0,    0	  ) );
-		LCD_fill( setColor(0,	0xFF, 0	  ) );
-		LCD_fill( setColor(0,   0,    0xFF) );
+		LCD_fill( setColor( 0xFF, 0x00, 0x00 ) );
+		DELAY(100000);
+		LCD_fill( setColor( 0x00, 0xFF, 0x00 ) );
+		DELAY(100000);
+		LCD_fill( setColor( 0x00, 0x00, 0xFF ) );
+		DELAY(100000);
 	}
 
 	
