@@ -120,13 +120,15 @@ static void lcd_delayed_attach(void *xsc);
 
 
 static int lcd_attach(device_t dev )
-{
+{ 
+    uprintf("LCD attach \n");	
+
     struct lcd_sc_t *sc;
 
     sc = device_get_softc(dev);
     sc->dev = dev;	
 
-    LCD_LOCK_INIT(sc);
+    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->dev), "LCD Mutex", MTX_DEF);
 
     config_intrhook_oneshot( lcd_delayed_attach, sc );	
 	
