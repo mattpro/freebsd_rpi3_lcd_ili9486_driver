@@ -98,9 +98,9 @@ void lcd_task( void *arg )
 {
 	for(;;)
 	{
-		LCD_fill( setColor(0,0,0) );
+		LCD_fill(lcdBuffer, setColor(0,0,0) );
 		DELAY(10000);
-		LCD_fill( setColor(0xff,0,0) );
+		LCD_fill(lcdBuffer, setColor(0xff,0,0) );
 		DELAY(10000);
 	}
 
@@ -473,10 +473,10 @@ void LCD_init(void)
 	int k;
 	for ( u = 0 ; u < 10 ; u ++ )
 	{	
-		LCD_bufferClear();
+		LCD_bufferClear( lcdBuffer );
 		for ( k = u*10 ; k < (u*10+20) ; k++ )
 		{
-			lcdBuffer[k] = setColor( 0xFF, 0x00, 0x00 );
+			lcdBuffer[k] = setColor( k, 0x00, 0x00 );
 		}
 		
 		LCD_showBuffer(lcdBuffer);
@@ -558,7 +558,7 @@ static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 	
 	uprintf("Set color to: %d\n", color );
 
-	LCD_fill( color  );
+	LCD_fill( lcdBuffer, color  );
 
     	LCD_UNLOCK(lcd_sc);    
     	return 0;
