@@ -27,7 +27,7 @@ struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
-uint8_t lcdBuffer[320*480];
+uint8_t lcdBuffer[320*480 + 10000];
 
 
 /* Zmienne dotyczace LCD */
@@ -280,9 +280,9 @@ void LCD_fill(uint16_t color)
 	int i;
 	for ( i = 0 ; i < 30  ; i ++ )
 	{	
-		spi_cmd.tx_data = (uint8_t*) lcdBuffer[5120*i];
+		spi_cmd.tx_data = (uint8_t*)&lcdBuffer[5120*i];
 		spi_cmd.rx_data = NULL;
-		spi_cmd.tx_data_sz = 5120;
+		spi_cmd.tx_data_sz =2* 5120;
 		spi_cmd.rx_data_sz = 0;
     		SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 
