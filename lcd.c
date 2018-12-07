@@ -275,11 +275,15 @@ void LCD_fill(uint16_t color)
     	spi_cmd.tx_data =(uint8_t*) lcdBuffer;
     	spi_cmd.rx_data = NULL;
     	spi_cmd.rx_data_sz = 0;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
-    	spi_cmd.tx_data_sz = 10000;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
+    	spi_cmd.tx_data_sz = 10240;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
 	
 	int i;
-	for ( i = 0 ; i < 31  ; i ++ )
-	{
+	for ( i = 0 ; i < 30  ; i ++ )
+	{	
+		spi_cmd.tx_data = (uint8_t*) lcdBuffer[5120*i];
+		spi_cmd.rx_data = NULL;
+		spi_cmd.tx_data_sz = 5120;
+		spi_cmd.rx_data_sz = 0;
     		SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 
 	}
