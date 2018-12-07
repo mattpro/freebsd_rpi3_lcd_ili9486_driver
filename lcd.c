@@ -14,6 +14,8 @@
 #include <sys/lock.h>
 #include <sys/mutex.h>
 
+#include <sys/kthread.h>
+
 #include <dev/ofw/ofw_bus_subr.h>
 #include <dev/ofw/openfirm.h>
 
@@ -86,6 +88,19 @@ static int lcd_probe(device_t dev)
   	return (rv); /* Only I can use this device. */
 }
 
+void lcd_task( void *arg);
+
+void lcd_task( void *arg )
+{
+	for(;;)
+	{
+		LCD_fill( setColor(0,0,0) );
+		DELAY(10000);
+		LCD_fill( setColor(0xff,0,0) );
+		DELAY(10000);
+	}
+
+} 
 
 
 static int lcd_attach(device_t dev)
@@ -100,6 +115,8 @@ static int lcd_attach(device_t dev)
     }
     mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
     LCD_init();
+
+    kproc_create( &lcd_task, lcd_sc, &lcd_sc->p, 0, 0, "task");
 
     return(0);
 }
@@ -212,7 +229,6 @@ void LCD_setRotation(uint8_t rotation)
 	}
 }
 
-uint16_t setColor(uint8_t r, uint8_t g, uint8_t b);
 
 uint16_t setColor(uint8_t r, uint8_t g, uint8_t b)
 {

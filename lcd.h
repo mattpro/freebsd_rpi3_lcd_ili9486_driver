@@ -19,6 +19,7 @@ struct lcd_sc_t
     device_t dev;
     device_t dev_gpio;
     struct mtx mtx;
+    struct proc *p;
 };
 
 
@@ -38,6 +39,7 @@ void LCD_init(void);
 void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour);
 void LCD_fill(uint16_t color);
 void LCD_brightness(uint8_t brightness);
+uint16_t setColor( uint8_t r, uint8_t g, uint8_t b);
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag);
 static int lcd_probe(device_t dev);
