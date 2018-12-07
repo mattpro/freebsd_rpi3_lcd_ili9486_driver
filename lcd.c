@@ -73,6 +73,12 @@ static struct ofw_compat_data compat_data[] = {
 	{ NULL, 		0},
 };
 
+static struct cdevsw lcd_cdevsw = {
+	.d_version = D_VERSION,
+	.d_write  = lcd_write,
+	.d_name  = "MattProLCD"
+};
+
 
 /* Register LCD Newbus driver */
 DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
@@ -123,25 +129,25 @@ static int lcd_attach(device_t dev )
 { 
     uprintf("LCD attach \n");	
 
-    struct lcd_sc_t *sc;
-
-    sc = device_get_softc(dev);
-    sc->dev = dev;	
-
-    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->dev), "LCD Mutex", MTX_DEF);
-
-    config_intrhook_oneshot( lcd_delayed_attach, sc );	
+//    config_intrhook_oneshot( lcd_delayed_attach, sc );	
 	
-//    lcd_sc = device_get_softc(dev);
-//    lcd_sc->dev = dev;
-//    lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
-//    if (lcd_sc->dev_gpio == NULL)
-//   {
-//		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
-//		return (1);
-//    }
-//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->dev), "LCD Mutex", MTX_DEF);
-//    LCD_init();
+    lcd_sc = device_get_softc(dev);
+    lcd_sc->dev = dev;
+    lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
+    if (lcd_sc->dev_gpio == NULL)
+   {
+		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
+		return (1);
+    }
+    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->dev), "LCD Mutex", MTX_DEF);
+    LCD_init();
+
+    lcd_sc->cdev_p = make_dev( &lcd_cdevsw, 
+				device_get_unit(dev),
+				UID_ROOT,
+				GID_WHEEL,
+				0600, "lcdMattPro");
+
 
 //    kproc_create( &lcd_task, lcd_sc, &lcd_sc->p, 0, 0, "task");
 
@@ -158,6 +164,7 @@ static void lcd_delayed_attach( void *xsc)
 static int lcd_detach(device_t dev)
 {
     mtx_destroy(&lcd_sc->mtx);
+    destroy_dev(lcd_sc->cdev_p);
     return(0);
 }
 
