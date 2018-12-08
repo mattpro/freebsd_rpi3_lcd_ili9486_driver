@@ -31,7 +31,8 @@
 
 struct lcd_sc_t
 {
-    device_t dev;
+    device_t devLcd;
+    device_t devTouch;
     device_t dev_gpio; 
     struct cdev* cdev_p;
     struct mtx mtx;

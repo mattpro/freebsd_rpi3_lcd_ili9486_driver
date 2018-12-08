@@ -53,12 +53,6 @@ static driver_t lcd_driver =
     sizeof(struct  lcd_sc_t)
   };
 
-static struct ofw_compat_data compat_data[] = {
-	{ "mattpro,lcd", 	1 },
-	{ "mattpro,touch", 	1},
-	{ NULL, 		0},
-};
-
 static struct cdevsw lcd_cdevsw = {
 	.d_version = D_VERSION,
 	.d_write  = lcd_write,
@@ -73,23 +67,27 @@ DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
 /* Adds LCD to SPI bus. */
 static int lcd_probe(device_t dev)
 {
-	int rv;
-
 	if( !ofw_bus_status_okay(dev) )
-	{
+	{	
+		uprintf("dskldkss 1 \n");
 		return (ENXIO);
 	}
 
-	if( ofw_bus_search_compatible(dev, compat_data)->ocd_data == 0 )
+	if( ofw_bus_is_compatible(dev, "mattpro,lcd") )
 	{ 
-		return (ENXIO);
+		uprintf("Znaleziono LCD na szynie SPI \n");
+		device_set_desc(dev, "LCD MattPro");
+		return (BUS_PROBE_DEFAULT);
 	}
+	
+        if( ofw_bus_is_compatible(dev, "mattpro,touch") )
+        {
+                uprintf("Znaleziono TOUCH na szynie SPI \n");
+                device_set_desc(dev, "LCD MattPro");
+                return (BUS_PROBE_DEFAULT);
+     	}
 
-	rv = BUS_PROBE_DEFAULT;
-
-	uprintf("LCD Probe \n");
-   	device_set_desc(dev, "Lcd MattPro");
-  	return (rv); /* Only I can use this device. */
+  	return (ENXIO);
 }
 
 void lcd_task( void *arg);
@@ -116,14 +114,14 @@ static int lcd_attach(device_t dev )
 //    config_intrhook_oneshot( lcd_delayed_attach, sc );	
 	
     lcd_sc = device_get_softc(dev);
-    lcd_sc->dev = dev;
+    lcd_sc->devLcd = dev;
     lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
     if (lcd_sc->dev_gpio == NULL)
     {
-		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
+		device_printf(lcd_sc->devLcd, "[LCD] Error: failed to get the GPIO dev\n");
 		return (1);
     }
-    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->dev), "LCD Mutex", MTX_DEF);
+    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
     LCD_init();
 
     lcd_sc->cdev_p = make_dev( &lcd_cdevsw, 
@@ -169,7 +167,7 @@ void LCD_spiSendByte(uint8_t byte)
     spi_cmd.rx_data = NULL;
     spi_cmd.rx_data_sz = 0;
     spi_cmd.tx_data_sz = 1;
-    SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+    SPIBUS_TRANSFER(device_get_parent(lcd_sc->devLcd), lcd_sc->devLcd, &spi_cmd);
 }
 
 
@@ -182,7 +180,7 @@ void LCD_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen)
     spi_cmd.rx_data = rxData;
     spi_cmd.rx_data_sz = dataLen;
     spi_cmd.tx_data_sz = dataLen;
-    SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+    SPIBUS_TRANSFER(device_get_parent(lcd_sc->devLcd), lcd_sc->devLcd, &spi_cmd);
 }
 
 
@@ -323,7 +321,7 @@ void LCD_fill(uint16_t* buffer, uint16_t color)
 		spi_cmd.rx_data = NULL;
 		spi_cmd.tx_data_sz = 2 * 5120;
 		spi_cmd.rx_data_sz = 0;
-    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->devLcd), lcd_sc->devLcd, &spi_cmd);
 	}
 }
 
@@ -354,7 +352,7 @@ void LCD_showBuffer(uint16_t* buffer)
 		spi_cmd.rx_data = NULL;
 		spi_cmd.tx_data_sz = 2 * 5120;
 		spi_cmd.rx_data_sz = 0;
-    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->devLcd), lcd_sc->devLcd, &spi_cmd);
 	}
 }
 
@@ -471,7 +469,7 @@ void LCD_init(void)
 	} 
 
 
-
+/*
 	uprintf("Writre buffer test\n");
 	int u;
 	int k;
@@ -498,7 +496,7 @@ void LCD_init(void)
 		LCD_fill( lcdBuffer, setColor( 0x00, 0x00, 0xFF ) );
 		DELAY(100000);
 	}
-
+*/
 	
 	/*
 	uprintf("Test Spi multiple send \n");
