@@ -451,7 +451,7 @@ void LCD_init(void)
 
 	LCD_setRotation(0);
 	
-/*
+
 	int x;
 	int y;
 	
@@ -465,9 +465,9 @@ void LCD_init(void)
 			LCD_drawPixel( x+100, y, setColor( 0x00, 0x00, 0xFF ) );
 		}
 	} 
-	DELAY(1000000);
-*/
 
+
+/*
 	uprintf("Writre buffer test\n");
 	int u;
 	int k;
@@ -481,20 +481,20 @@ void LCD_init(void)
 		
 		LCD_showBuffer(lcdBuffer);
 	}
+*/
 
-/*
 	uprintf("Fill LCD test\n");
-	int u;
-	for ( u = 0 ; u < 10 ; u ++ )
+	int o;
+	for ( o = 0 ; o < 10 ; o ++ )
 	{
-		LCD_fill( bufferLcd, setColor( 0xFF, 0x00, 0x00 ) );
+		LCD_fill( lcdBuffer, setColor( 0xFF, 0x00, 0x00 ) );
 		DELAY(100000);
-		LCD_fill( bufferLcd, setColor( 0x00, 0xFF, 0x00 ) );
+		LCD_fill( lcdBuffer, setColor( 0x00, 0xFF, 0x00 ) );
 		DELAY(100000);
-		LCD_fill( bufferLcd, setColor( 0x00, 0x00, 0xFF ) );
+		LCD_fill( lcdBuffer, setColor( 0x00, 0x00, 0xFF ) );
 		DELAY(100000);
 	}
-*/
+
 	
 	/*
 	uprintf("Test Spi multiple send \n");
