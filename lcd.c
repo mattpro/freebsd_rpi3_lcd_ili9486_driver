@@ -1,3 +1,4 @@
+
 #include <sys/param.h>  
 #include <sys/module.h>
 #include <sys/kernel.h>
@@ -75,7 +76,7 @@ static int lcd_attach(device_t dev)
 							device_get_unit(dev),
 							UID_ROOT,
 							GID_WHEEL,
-							0600, "lcd");
+							0600, "spigen");
     return(0);
 }
 
@@ -160,7 +161,7 @@ void lcd_init(void)
 	
 	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	
-	for ( i = 0 ; i < 250 ; i ++ )
+	for( i = 0 ; i < 1000 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
 		lcd_send(i);
