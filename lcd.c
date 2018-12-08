@@ -25,12 +25,12 @@ struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
-static struct cdevsw lcd_cdevsw =
-{
-    .d_version = D_VERSION,
-    .d_write   = lcd_write,
-    .d_name    = "lcd"
-};
+//static struct cdevsw lcd_cdevsw =
+//{
+//    .d_version = D_VERSION,
+//    .d_write   = lcd_write,
+//    .d_name    = "lcdRpi"
+//};
 
 static device_method_t lcd_methods[] =
   {
@@ -43,7 +43,7 @@ static device_method_t lcd_methods[] =
   
 static driver_t lcd_driver =
   {
-    "lcd", 					/* driver’s official name */
+    "lcdRpi", 					/* driver’s official name */
     lcd_methods, 			/* device method table */
     sizeof(struct  lcd_sc_t)
   };
@@ -72,18 +72,18 @@ static int lcd_attach(device_t dev)
     }
     mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
     lcd_init();
-    lcd_sc->cdev_p = make_dev(&lcd_cdevsw,
-							device_get_unit(dev),
-							UID_ROOT,
-							GID_WHEEL,
-							0600, "spigen");
+//    lcd_sc->cdev_p = make_dev(&lcd_cdevsw,
+//							device_get_unit(dev),
+//							UID_ROOT,
+//							GID_WHEEL,
+//							0600, "lcdRPi");
     return(0);
 }
 
 static int lcd_detach(device_t dev)
 {
     mtx_destroy(&lcd_sc->mtx);
-    destroy_dev(lcd_sc->cdev_p);
+//    destroy_dev(lcd_sc->cdev_p);
     return(0);
 }
 
@@ -161,7 +161,7 @@ void lcd_init(void)
 	
 	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	
-	for( i = 0 ; i < 1000 ; i ++ )
+	for( i = 0 ; i < 100 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
 		lcd_send(i);
