@@ -469,13 +469,15 @@ void LCD_init(void)
 	DELAY(150000);
 
 	LCD_setRotation(3);
-	
-	
+	LCD_clear(lcdBuffer);
+	LCD_showBuffer(lcdBuffer);
+		
+	/*
 	uprintf("Write text test \n");
 	
 	FONT_DrawString((uint8_t*)lcdBuffer, "Napis testowy", 63, 63, &Robo13p);
 	LCD_showBuffer(lcdBuffer);
-	
+	*/
 	/*
 	int x;
 	int y;
@@ -573,11 +575,10 @@ static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 	int error = 0;
 	
 	LCD_LOCK(lcd_sc);
-	
 
 	error = copyin(uio->uio_iov->iov_base,
 		buff,
-		MIN( uio->uio_iov->iov_len, 6 ) );
+		MIN( uio->uio_iov->iov_len, 100 ) );
 	
 	if ( error != 0 )
 	{
@@ -587,9 +588,13 @@ static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 	}
 	
 	uprintf("Write to LCD: %s\n", buff );
-
-    LCD_UNLOCK(lcd_sc);    
 	
-    return 0;
+	LCD_clear(lcdBuffer);
+        FONT_DrawString((uint8_t*)lcdBuffer, buff, 10, 10, &Robo13p);
+        
+	LCD_showBuffer(lcdBuffer);
+    	LCD_UNLOCK(lcd_sc);    
+	
+    	return 0;
 }
 

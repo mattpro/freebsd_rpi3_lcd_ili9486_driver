@@ -1,12 +1,21 @@
 #include <sys/types.h>  
 #include <sys/systm.h>
+#include <sys/libkern.h>
+#include "lcd.h"
 #include "myFont.h"
 
 
 static void Font_SetPixel(uint8_t *buffer, uint32_t x, uint32_t y, const uint8_t *color)
 {
-	buffer[ (x + ( 480 * y ) ) * 2 ]     = *( color  + 1 );
-	buffer[ (x + ( 480 * y ) ) * 2 + 1 ] = *( color ); 
+	uint32_t position;
+		
+	position = ( x + ( LCD_SCREEN_WIDTH * y ) ) * 2 + 1;
+	if ( (position + 1) > ( LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT * 2 ) )
+	{
+		return 0;
+	}
+	buffer[ position ]     = *( color  + 1 );
+	buffer[ position + 1 ] = *( color ); 
 }
 
 
@@ -147,7 +156,7 @@ static int Font_Utf8NextChar(const char *str, int32_t start, uint32_t *resultCod
     }
     return (result);
 }
-
+/*
 
 static int strlen(const char *str)
 {
@@ -156,7 +165,7 @@ static int strlen(const char *str)
         for (s = str; *s; ++s) ;
         return (s - str);
 }
-
+*/
 
 int32_t FONT_TextWidth(const char *str, const tFont *font)
 {
@@ -198,6 +207,10 @@ void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, c
     uint32_t code = 0;
     uint32_t x1 = x;
     int32_t nextIndex;
+    uint32_t y_init;
+	
+    y_init = x % 480;
+
 
     uprintf("LEN=%d\n", len);
 	
@@ -208,14 +221,15 @@ void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, c
             const tChar *ch = Font_FindCharByCode(code, font);
             if (ch != 0)
             {
-                Font_DrawBitmapFont(buffer, x1, y, ch->image);
-                x1 += ch->image->width + 1; 
+                Font_DrawBitmapFont(buffer, x1, y+(x1%480 - y_init), ch->image);
+                x1 += ch->image->width + 1;
+		 
             }
         }
         index = nextIndex;
         if (nextIndex < 0)
-		{
+	{
             break;
-		}
+	}
     }
 }
