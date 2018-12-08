@@ -571,14 +571,16 @@ void LCD_init(void)
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 {   	
-	char buff[100];
+	char buff[1000];
 	int error = 0;
+
 	
 	LCD_LOCK(lcd_sc);
 
+	memset(buff, 0 , sizeof(buff));
 	error = copyin(uio->uio_iov->iov_base,
 		buff,
-		MIN( uio->uio_iov->iov_len, 100 ) );
+		MIN( uio->uio_iov->iov_len, 1000 ) );
 	
 	if ( error != 0 )
 	{

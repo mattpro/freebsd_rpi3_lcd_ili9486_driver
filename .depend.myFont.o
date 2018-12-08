@@ -17,4 +17,4 @@ myFont.o: myFont.c /usr/src/sys/sys/types.h /usr/src/sys/sys/cdefs.h \
   machine/cpu.h machine/frame.h /usr/src/sys/sys/signal.h \
   machine/_limits.h machine/signal.h /usr/src/sys/sys/ucontext.h \
   machine/ucontext.h /usr/src/sys/sys/_ucontext.h \
-  /usr/src/sys/sys/kpilite.h /usr/src/sys/sys/libkern.h myFont.h
+  /usr/src/sys/sys/kpilite.h /usr/src/sys/sys/libkern.h lcd.h myFont.h

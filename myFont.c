@@ -12,10 +12,10 @@ static void Font_SetPixel(uint8_t *buffer, uint32_t x, uint32_t y, const uint8_t
 	position = ( x + ( LCD_SCREEN_WIDTH * y ) ) * 2 + 1;
 	if ( (position + 1) > ( LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT * 2 ) )
 	{
-		return 0;
+		return;
 	}
-	buffer[ position ]     = *( color  + 1 );
-	buffer[ position + 1 ] = *( color ); 
+	buffer[ position ]    = *( color + 1 );
+	buffer[ position - 1] = *( color ); 
 }
 
 
@@ -209,7 +209,7 @@ void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, c
     int32_t nextIndex;
     uint32_t y_init;
 	
-    y_init = x % 480;
+    y_init = x / 480;
 
 
     uprintf("LEN=%d\n", len);
@@ -221,7 +221,7 @@ void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, c
             const tChar *ch = Font_FindCharByCode(code, font);
             if (ch != 0)
             {
-                Font_DrawBitmapFont(buffer, x1, y+(x1%480 - y_init), ch->image);
+                Font_DrawBitmapFont(buffer, x1, y+ ( x1 / 480 - y_init )*ch->image->height, ch->image);
                 x1 += ch->image->width + 1;
 		 
             }
