@@ -2,7 +2,7 @@
 #include "myFont.h"
 
 
-static void Font_SetPixel(uint8_t *buffer, uint32_t x, uint32_t y, uint8_t *color)
+static void Font_SetPixel(uint8_t *buffer, uint32_t x, uint32_t y, const uint8_t *color)
 {
 	buffer[ (x + ( 480 * y ) ) * 2 ]     = *( color  + 1 );
 	buffer[ (x + ( 480 * y ) ) * 2 + 1 ] = *( color ); 
@@ -14,7 +14,7 @@ static void Font_DrawBitmapFont(uint8_t *buffer, int x, int y, const tImage *ima
     uint32_t x0, y0;
     const uint8_t *pdata;
 	
-	pdata = ( const uint8_t *) image->data;
+    pdata = ( const uint8_t *) image->data;
     // rows
     for (y0 = 0; y0 < image->height; y0++)
     {
@@ -149,7 +149,7 @@ static int Font_Utf8NextChar(const char *str, int32_t start, uint32_t *resultCod
 
 int32_t FONT_TextWidth(const char *str, const tFont *font)
 {
-	int32_t len = strlen(str);
+	int32_t len = sizeof(str);
 	int32_t index = 0;
 	uint32_t code = 0;
 	int32_t nextIndex;
@@ -182,7 +182,7 @@ void FONT_DrawStringHCenter(uint8_t *buffer, const char *str, uint32_t x, uint32
 
 void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, const tFont *font)
 {
-    int32_t len = strlen(str);
+    int32_t len = sizeof(str);
     int32_t index = 0;
     uint32_t code = 0;
     uint32_t x1 = x;

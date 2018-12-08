@@ -33,4 +33,4 @@ lcd.o: lcd.c /usr/src/sys/sys/param.h /usr/src/sys/sys/_null.h \
   /usr/src/sys/sys/gpio.h /usr/src/sys/sys/kthread.h \
   /usr/src/sys/dev/ofw/ofw_bus_subr.h /usr/src/sys/dev/ofw/openfirm.h \
   /usr/src/sys/sys/malloc.h machine/ofw_machdep.h /usr/src/sys/vm/vm.h \
-  machine/vm.h ofw_bus_if.h spibus_if.h gpio_if.h lcd.h
+  machine/vm.h ofw_bus_if.h spibus_if.h gpio_if.h myFont.h lcd.h

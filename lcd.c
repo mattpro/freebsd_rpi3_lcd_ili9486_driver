@@ -489,10 +489,11 @@ void LCD_init(void)
 	} 
 
 
-/*
+
 	uprintf("Writre buffer test\n");
+
 	int u;
-	int k;
+	ink k;
 	for ( u = 0 ; u < 50 ; u ++ )
 	{	
 		LCD_bufferClear( lcdBuffer );
@@ -572,8 +573,8 @@ static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 	
 
 	error = copyin(uio->uio_iov->iov_base,
-			buff,
-			MIN( uio->uio_iov->iov_len, 6 ) );
+		buff,
+		MIN( uio->uio_iov->iov_len, 6 ) );
 	
 	if ( error != 0 )
 	{
