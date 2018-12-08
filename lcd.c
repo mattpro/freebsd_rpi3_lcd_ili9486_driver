@@ -73,18 +73,20 @@ static int lcd_probe(device_t dev)
 		return (ENXIO);
 	}
 
-	if( ofw_bus_is_compatible(dev, "mattpro,lcd") )
+	if( ofw_bus_is_compatible(dev, "mattpro,lcd") || ofw_bus_is_compatible(dev, "mattpro,touch") )
 	{ 
 		uprintf("Znaleziono LCD na szynie SPI \n");
 		device_set_desc(dev, "LCD MattPro");
+		lcd_sc = device_get_softc(dev);
 		return (BUS_PROBE_DEFAULT);
 	}
-        else if( ofw_bus_is_compatible(dev, "mattpro,touch") )
-        {
-                uprintf("Znaleziono TOUCH na szynie SPI \n");
-                device_set_desc(dev, "LCD MattPro");
-                return (BUS_PROBE_DEFAULT);
-     	}
+  
+      //  else if( ofw_bus_is_compatible(dev, "mattpro,touch") )
+      //  {
+      //          uprintf("Znaleziono TOUCH na szynie SPI \n");
+      //          device_set_desc(dev, "LCD MattPro");
+      //          return (BUS_PROBE_DEFAULT);
+     // 	}
 
   	return (ENXIO);
 }
@@ -112,7 +114,7 @@ static int lcd_attach(device_t dev )
 
 //    config_intrhook_oneshot( lcd_delayed_attach, sc );	
 	
-    lcd_sc = device_get_softc(dev);
+ //   lcd_sc = device_get_softc(dev);
     if( ofw_bus_is_compatible(dev, "mattpro,lcd") )
     {
 	uprintf("Attach LCD\n");
@@ -125,13 +127,13 @@ static int lcd_attach(device_t dev )
     }
 
     lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
-    if (lcd_sc->dev_gpio == NULL)
-    {
-		device_printf(lcd_sc->devLcd, "[LCD] Error: failed to get the GPIO dev\n");
-		return (1);
-    }
-    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
-    LCD_init();
+//    if (lcd_sc->dev_gpio == NULL)
+//    {
+//		device_printf(lcd_sc->devLcd, "[LCD] Error: failed to get the GPIO dev\n");
+//		return (1);
+//    }
+//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
+//    LCD_init();
 
     lcd_sc->cdev_p = make_dev( &lcd_cdevsw, 
 				device_get_unit(dev),
