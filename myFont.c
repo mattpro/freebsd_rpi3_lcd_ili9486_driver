@@ -1,4 +1,5 @@
 #include <sys/types.h>  
+#include <sys/systm.h>
 #include "myFont.h"
 
 
@@ -147,9 +148,19 @@ static int Font_Utf8NextChar(const char *str, int32_t start, uint32_t *resultCod
     return (result);
 }
 
+
+static int strlen(const char *str)
+{
+        const char *s;
+
+        for (s = str; *s; ++s) ;
+        return (s - str);
+}
+
+
 int32_t FONT_TextWidth(const char *str, const tFont *font)
 {
-	int32_t len = sizeof(str);
+	int32_t len = strlen(str);
 	int32_t index = 0;
 	uint32_t code = 0;
 	int32_t nextIndex;
@@ -182,11 +193,13 @@ void FONT_DrawStringHCenter(uint8_t *buffer, const char *str, uint32_t x, uint32
 
 void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, const tFont *font)
 {
-    int32_t len = sizeof(str);
+    int32_t len = strlen(str);
     int32_t index = 0;
     uint32_t code = 0;
     uint32_t x1 = x;
     int32_t nextIndex;
+
+    uprintf("LEN=%d\n", len);
 	
     while (index < len)
     {

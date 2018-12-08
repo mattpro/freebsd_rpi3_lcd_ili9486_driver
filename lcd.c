@@ -76,7 +76,7 @@ static int lcd_probe(device_t dev)
 		return (ENXIO);
 	}
 
-	if( ofw_bus_is_compatible(dev, "mattpro,lcd") || ofw_bus_is_compatible(dev, "mattpro,touch") )
+	if( ofw_bus_is_compatible(dev, "mattpro,lcd") ) //|| ofw_bus_is_compatible(dev, "mattpro,touch") )
 	{ 
 		uprintf("Znaleziono LCD na szynie SPI \n");
 		device_set_desc(dev, "LCD MattPro");
@@ -122,12 +122,15 @@ static int lcd_attach(device_t dev )
     {
 	uprintf("Attach LCD\n");
 	lcd_sc->devLcd = dev;
-    }
-    else if ( ofw_bus_is_compatible(dev, "mattpro,touch") )
-    {
-	uprintf("Attach Touch\n");
-	lcd_sc->devTouch = dev;
-    }
+	lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
+//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
+	LCD_init();   
+ }
+//    else if ( ofw_bus_is_compatible(dev, "mattpro,touch") )
+//    {
+//	uprintf("Attach Touch\n");
+//	lcd_sc->devTouch = dev;
+ //   }
 
     lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
 //    if (lcd_sc->dev_gpio == NULL)
@@ -313,13 +316,13 @@ void LCD_fill(uint16_t* buffer, uint16_t color)
 		lcdBuffer[i] = color;
 	}
 
-	LCD_writeCommand(0x2A);
+	LCD_writeCommand(0x2B);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
 	LCD_writeData(0x3F);
 
-	LCD_writeCommand(0x2B);
+	LCD_writeCommand(0x2C);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
@@ -344,13 +347,13 @@ void LCD_showBuffer(uint16_t* buffer)
 	struct spi_command spi_cmd;
 	int i;	
 
-	LCD_writeCommand(0x2A);
+	LCD_writeCommand(0x2B);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
 	LCD_writeData(0x3F);
 
-	LCD_writeCommand(0x2B);
+	LCD_writeCommand(0x2A);
 	LCD_writeData(0x00);
 	LCD_writeData(0x00);
 	LCD_writeData(0x01);
@@ -465,7 +468,7 @@ void LCD_init(void)
 	LCD_writeCommand(0x29); // Display ON
 	DELAY(150000);
 
-	LCD_setRotation(0);
+	LCD_setRotation(3);
 	
 	
 	uprintf("Write text test \n");
