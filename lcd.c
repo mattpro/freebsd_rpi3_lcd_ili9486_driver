@@ -79,8 +79,7 @@ static int lcd_probe(device_t dev)
 		device_set_desc(dev, "LCD MattPro");
 		return (BUS_PROBE_DEFAULT);
 	}
-	
-        if( ofw_bus_is_compatible(dev, "mattpro,touch") )
+        else if( ofw_bus_is_compatible(dev, "mattpro,touch") )
         {
                 uprintf("Znaleziono TOUCH na szynie SPI \n");
                 device_set_desc(dev, "LCD MattPro");
@@ -114,7 +113,17 @@ static int lcd_attach(device_t dev )
 //    config_intrhook_oneshot( lcd_delayed_attach, sc );	
 	
     lcd_sc = device_get_softc(dev);
-    lcd_sc->devLcd = dev;
+    if( ofw_bus_is_compatible(dev, "mattpro,lcd") )
+    {
+	uprintf("Attach LCD\n");
+	lcd_sc->devLcd = dev;
+    }
+    else if ( ofw_bus_is_compatible(dev, "mattpro,touch") )
+    {
+	uprintf("Attach Touch\n");
+	lcd_sc->devTouch = dev;
+    }
+
     lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
     if (lcd_sc->dev_gpio == NULL)
     {
