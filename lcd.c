@@ -315,6 +315,8 @@ void LCD_fill(uint16_t* buffer, uint16_t color)
 	
 	LCD_writeCommand(0x2C); // Memory write?
 
+	memset(&spi_cmd, 0, sizeof(struct spi_command) );
+
 	for ( i = 0 ; i < 30  ; i ++ )
 	{	
 		spi_cmd.tx_data = (uint8_t*)&lcdBuffer[5120*i];
@@ -343,6 +345,8 @@ void LCD_showBuffer(uint16_t* buffer)
 	LCD_writeData(0xE0);
 	
 	LCD_writeCommand(0x2C); // Memory write?
+
+	memset(&spi_cmd, 0, sizeof(struct spi_command) );
 
 	for ( i = 0 ; i < 30  ; i ++ )
 	{	
@@ -467,21 +471,21 @@ void LCD_init(void)
 	} 
 
 
-/*
+
 	uprintf("Writre buffer test\n");
 	int u;
 	int k;
-	for ( u = 0 ; u < 10 ; u ++ )
+	for ( u = 0 ; u < 50 ; u ++ )
 	{	
 		LCD_bufferClear( lcdBuffer );
-		for ( k = u*10 ; k < (u*10+20) ; k++ )
+		for ( k = 0 ; k < LCD_SCREEN_WIDTH*LCD_SCREEN_HEIGHT ; k++ )
 		{
-			lcdBuffer[k] = setColor( k, 0x00, 0x00 );
+			lcdBuffer[k] = setColor( k%(u+9), k%(u+78), k%(u*4) );
 		}
 		
 		LCD_showBuffer(lcdBuffer);
 	}
-*/
+
 
 	uprintf("Fill LCD test\n");
 	int o;
