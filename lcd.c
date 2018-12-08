@@ -20,8 +20,6 @@
 #include "lcd.h"
 
 
-
-struct lcd_disp_buff_t 	lcd_disp_buff;
 struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
@@ -101,11 +99,7 @@ static int lcd_shutdown(device_t dev)
 
 void lcd_do_reset(void)
 {
-    GPIO_PIN_SET(lcd_sc->dev_gpio, LCD_RST, GPIO_PIN_HIGH);
-    DELAY(10000); // 10 msec
-    GPIO_PIN_SET(lcd_sc->dev_gpio, LCD_RST, GPIO_PIN_LOW);
-    DELAY(10000); // 10 msec
-    GPIO_PIN_SET(lcd_sc->dev_gpio, LCD_RST, GPIO_PIN_HIGH);
+
 }
 
 void lcd_send(uint8_t byte)
@@ -168,7 +162,7 @@ void lcd_init(void)
 	
 	for ( i = 0 ; i < 250 ; i ++ )
 	{
-		GPIO_PIN_TOOGEL(lcd_sc->dev_gpio, LED_PIN_NUMBER);
+		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
 		lcd_send(i);
 		DELAY(50000);
 	}
