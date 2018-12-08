@@ -43,13 +43,13 @@ static device_method_t lcd_methods[] =
   
 static driver_t lcd_driver =
   {
-    "lcdRpi", 					/* driver’s official name */
+    "lcdRpiX", 					/* driver’s official name */
     lcd_methods, 			/* device method table */
     sizeof(struct  lcd_sc_t)
   };
 
 /* Register LCD Newbus driver */
-DRIVER_MODULE(lcd, spibus, lcd_driver, lcd_devclass, NULL, NULL);
+DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
 
 
 
@@ -70,7 +70,7 @@ static int lcd_attach(device_t dev)
 		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
 		return (1);
     }
-    mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
+//    mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
     lcd_init();
 //    lcd_sc->cdev_p = make_dev(&lcd_cdevsw,
 //							device_get_unit(dev),
@@ -161,11 +161,11 @@ void lcd_init(void)
 	
 	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	
-	for( i = 0 ; i < 100 ; i ++ )
+	for( i = 0 ; i < 10 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
 		lcd_send(i);
-		DELAY(50000);
+		DELAY(100000);
 	}
 }
 
