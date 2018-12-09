@@ -27,7 +27,8 @@ struct lcd_sc_t
 
 
 
-void ILI9341_SPI_Send(unsigned char SPI_Data);
+void ILI9341_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen);
+void ILI9341_spiSendByte(unsigned char SPI_Data);
 void ILI9341_writeCommand(uint8_t Command);
 void ILI9341_writeData(uint8_t Data);
 void ILI9341_reset(void);

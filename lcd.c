@@ -22,7 +22,7 @@
 #include "gpio_if.h"
 
 #include "lcd.h"
-
+ 
 
 struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
@@ -80,7 +80,7 @@ static int lcd_probe(device_t dev)
 
 	rv = BUS_PROBE_DEFAULT;
 
-    uprintf("LCD Probe \n");
+   	 uprintf("LCD Probe \n");
   	device_set_desc(dev, "Lcd MattPro");
   	return (rv); /* Only I can use this device. */
 }
@@ -176,28 +176,28 @@ void ILI9341_setRotation(uint8_t rotation)
 {
 	uprintf("LCD set rotation = %d \n", rotation);
 
-	ILI9341_Write_Command(0x36);
+	ILI9341_writeCommand(0x36);
 	DELAY(1000);
 		
 	switch(rotation) 
 	{
 		case SCREEN_VERTICAL_1:
-			ILI9341_Write_Data(0x40|0x08);
+			ILI9341_writeData(0x40|0x08);
 			LCD_WIDTH = 240;
 			LCD_HEIGHT = 320;
 			break;
 		case SCREEN_HORIZONTAL_1:
-			ILI9341_Write_Data(0x20|0x08);
+			ILI9341_writeData(0x20|0x08);
 			LCD_WIDTH  = 320;
 			LCD_HEIGHT = 240;
 			break;
 		case SCREEN_VERTICAL_2:
-			ILI9341_Write_Data(0x80|0x08);
+			ILI9341_writeData(0x80|0x08);
 			LCD_WIDTH  = 240;
 			LCD_HEIGHT = 320;
 			break;
 		case SCREEN_HORIZONTAL_2:
-			ILI9341_Write_Data(0x40|0x80|0x20|0x08);
+			ILI9341_writeData(0x40|0x80|0x20|0x08);
 			LCD_WIDTH  = 320;
 			LCD_HEIGHT = 240;
 			break;
@@ -265,141 +265,141 @@ void ILI9341_init(void)
 	for( i = 0 ; i < 10 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
-		lcd_send(i);
-		DELAY(10000);
+		//lcd_send(i);
+		DELAY(50000);
 	}
 
-	ILI9341_Reset();
+	ILI9341_reset();
 
 	//SOFTWARE RESET
-	ILI9341_Write_Command(0x01);
+	ILI9341_writeCommand(0x01);
 	DELAY(1000000);
 		
 	//POWER CONTROL A
-	ILI9341_Write_Command(0xCB);
-	ILI9341_Write_Data(0x39);
-	ILI9341_Write_Data(0x2C);
-	ILI9341_Write_Data(0x00);
-	ILI9341_Write_Data(0x34);
-	ILI9341_Write_Data(0x02);
+	ILI9341_writeCommand(0xCB);
+	ILI9341_writeData(0x39);
+	ILI9341_writeData(0x2C);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x34);
+	ILI9341_writeData(0x02);
 
 	//POWER CONTROL B
-	ILI9341_Write_Command(0xCF);
-	ILI9341_Write_Data(0x00);
-	ILI9341_Write_Data(0xC1);
-	ILI9341_Write_Data(0x30);
+	ILI9341_writeCommand(0xCF);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0xC1);
+	ILI9341_writeData(0x30);
 
 	//DRIVER TIMING CONTROL A
-	ILI9341_Write_Command(0xE8);
-	ILI9341_Write_Data(0x85);
-	ILI9341_Write_Data(0x00);
-	ILI9341_Write_Data(0x78);
+	ILI9341_writeCommand(0xE8);
+	ILI9341_writeData(0x85);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x78);
 
 	//DRIVER TIMING CONTROL B
-	ILI9341_Write_Command(0xEA);
-	ILI9341_Write_Data(0x00);
-	ILI9341_Write_Data(0x00);
+	ILI9341_writeCommand(0xEA);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x00);
 
 	//POWER ON SEQUENCE CONTROL
-	ILI9341_Write_Command(0xED);
-	ILI9341_Write_Data(0x64);
-	ILI9341_Write_Data(0x03);
-	ILI9341_Write_Data(0x12);
-	ILI9341_Write_Data(0x81);
+	ILI9341_writeCommand(0xED);
+	ILI9341_writeData(0x64);
+	ILI9341_writeData(0x03);
+	ILI9341_writeData(0x12);
+	ILI9341_writeData(0x81);
 
 	//PUMP RATIO CONTROL
-	ILI9341_Write_Command(0xF7);
-	ILI9341_Write_Data(0x20);
+	ILI9341_writeCommand(0xF7);
+	ILI9341_writeData(0x20);
 
 	//POWER CONTROL,VRH[5:0]
-	ILI9341_Write_Command(0xC0);
-	ILI9341_Write_Data(0x23);
+	ILI9341_writeCommand(0xC0);
+	ILI9341_writeData(0x23);
 
 	//POWER CONTROL,SAP[2:0];BT[3:0]
-	ILI9341_Write_Command(0xC1);
-	ILI9341_Write_Data(0x10);
+	ILI9341_writeCommand(0xC1);
+	ILI9341_writeData(0x10);
 
 	//VCM CONTROL
-	ILI9341_Write_Command(0xC5);
-	ILI9341_Write_Data(0x3E);
-	ILI9341_Write_Data(0x28);
+	ILI9341_writeCommand(0xC5);
+	ILI9341_writeData(0x3E);
+	ILI9341_writeData(0x28);
 
 	//VCM CONTROL 2
-	ILI9341_Write_Command(0xC7);
-	ILI9341_Write_Data(0x86);
+	ILI9341_writeCommand(0xC7);
+	ILI9341_writeData(0x86);
 
 	//MEMORY ACCESS CONTROL
-	ILI9341_Write_Command(0x36);
-	ILI9341_Write_Data(0x48);
+	ILI9341_writeCommand(0x36);
+	ILI9341_writeData(0x48);
 
 	//PIXEL FORMAT
-	ILI9341_Write_Command(0x3A);
-	ILI9341_Write_Data(0x55);
+	ILI9341_writeCommand(0x3A);
+	ILI9341_writeData(0x55);
 
 	//FRAME RATIO CONTROL, STANDARD RGB COLOR
-	ILI9341_Write_Command(0xB1);
-	ILI9341_Write_Data(0x00);
-	ILI9341_Write_Data(0x18);
+	ILI9341_writeCommand(0xB1);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x18);
 
 	//DISPLAY FUNCTION CONTROL
-	ILI9341_Write_Command(0xB6);
-	ILI9341_Write_Data(0x08);
-	ILI9341_Write_Data(0x82);
-	ILI9341_Write_Data(0x27);
+	ILI9341_writeCommand(0xB6);
+	ILI9341_writeData(0x08);
+	ILI9341_writeData(0x82);
+	ILI9341_writeData(0x27);
 
 	//3GAMMA FUNCTION DISABLE
-	ILI9341_Write_Command(0xF2);
-	ILI9341_Write_Data(0x00);
+	ILI9341_writeCommand(0xF2);
+	ILI9341_writeData(0x00);
 
 	//GAMMA CURVE SELECTED
-	ILI9341_Write_Command(0x26);
-	ILI9341_Write_Data(0x01);
+	ILI9341_writeCommand(0x26);
+	ILI9341_writeData(0x01);
 
 	//POSITIVE GAMMA CORRECTION
-	ILI9341_Write_Command(0xE0);
-	ILI9341_Write_Data(0x0F);
-	ILI9341_Write_Data(0x31);
-	ILI9341_Write_Data(0x2B);
-	ILI9341_Write_Data(0x0C);
-	ILI9341_Write_Data(0x0E);
-	ILI9341_Write_Data(0x08);
-	ILI9341_Write_Data(0x4E);
-	ILI9341_Write_Data(0xF1);
-	ILI9341_Write_Data(0x37);
-	ILI9341_Write_Data(0x07);
-	ILI9341_Write_Data(0x10);
-	ILI9341_Write_Data(0x03);
-	ILI9341_Write_Data(0x0E);
-	ILI9341_Write_Data(0x09);
-	ILI9341_Write_Data(0x00);
+	ILI9341_writeCommand(0xE0);
+	ILI9341_writeData(0x0F);
+	ILI9341_writeData(0x31);
+	ILI9341_writeData(0x2B);
+	ILI9341_writeData(0x0C);
+	ILI9341_writeData(0x0E);
+	ILI9341_writeData(0x08);
+	ILI9341_writeData(0x4E);
+	ILI9341_writeData(0xF1);
+	ILI9341_writeData(0x37);
+	ILI9341_writeData(0x07);
+	ILI9341_writeData(0x10);
+	ILI9341_writeData(0x03);
+	ILI9341_writeData(0x0E);
+	ILI9341_writeData(0x09);
+	ILI9341_writeData(0x00);
 
 	//NEGATIVE GAMMA CORRECTION
-	ILI9341_Write_Command(0xE1);
-	ILI9341_Write_Data(0x00);
-	ILI9341_Write_Data(0x0E);
-	ILI9341_Write_Data(0x14);
-	ILI9341_Write_Data(0x03);
-	ILI9341_Write_Data(0x11);
-	ILI9341_Write_Data(0x07);
-	ILI9341_Write_Data(0x31);
-	ILI9341_Write_Data(0xC1);
-	ILI9341_Write_Data(0x48);
-	ILI9341_Write_Data(0x08);
-	ILI9341_Write_Data(0x0F);
-	ILI9341_Write_Data(0x0C);
-	ILI9341_Write_Data(0x31);
-	ILI9341_Write_Data(0x36);
-	ILI9341_Write_Data(0x0F);
+	ILI9341_writeCommand(0xE1);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x0E);
+	ILI9341_writeData(0x14);
+	ILI9341_writeData(0x03);
+	ILI9341_writeData(0x11);
+	ILI9341_writeData(0x07);
+	ILI9341_writeData(0x31);
+	ILI9341_writeData(0xC1);
+	ILI9341_writeData(0x48);
+	ILI9341_writeData(0x08);
+	ILI9341_writeData(0x0F);
+	ILI9341_writeData(0x0C);
+	ILI9341_writeData(0x31);
+	ILI9341_writeData(0x36);
+	ILI9341_writeData(0x0F);
 
 	//EXIT SLEEP
-	ILI9341_Write_Command(0x11);
-	DELAY(100000)
+	ILI9341_writeCommand(0x11);
+	DELAY(100000);
 
 	//TURN ON DISPLAY
-	ILI9341_Write_Command(0x29);
+	ILI9341_writeCommand(0x29);
 
 	//STARTING ROTATION
-	ILI9341_Set_Rotation(SCREEN_VERTICAL_1);
+	ILI9341_setRotation(SCREEN_VERTICAL_1);
 	uprintf("LCD init end ... \n");
 }
 
