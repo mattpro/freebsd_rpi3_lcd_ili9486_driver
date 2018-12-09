@@ -27,6 +27,8 @@ struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
+uint8_t lcdBuffer[320*480];
+
 
 /* Zmienne dotyczace LCD */
 volatile uint16_t LCD_HEIGHT = ILI9341_SCREEN_HEIGHT;
@@ -148,7 +150,6 @@ void ILI9341_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen)
 void ILI9341_writeCommand(uint8_t command)
 {
 	PIN_RESET(LCD_DC);
-//	DELAY(100);
 	ILI9341_spiSendByte(command);
 }
 
@@ -156,7 +157,6 @@ void ILI9341_writeCommand(uint8_t command)
 void ILI9341_writeData(uint8_t Data)
 {
 	PIN_SET(LCD_DC);
-//	DELAY(100);	
 	ILI9341_spiSendByte(Data);	
 }
 
@@ -177,7 +177,7 @@ void ILI9341_setRotation(uint8_t rotation)
 	uprintf("LCD set rotation = %d \n", rotation);
 
 	ILI9341_writeCommand(0x36);
-	DELAY(1000);
+	DELAY(100);
 		
 	switch(rotation) 
 	{
@@ -210,44 +210,43 @@ void ILI9341_setRotation(uint8_t rotation)
 
 void ILI9341_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour) 
 {
-	uint8_t tempBuffer[4];
-	uint8_t rxBuff[4];
-
-	uprintf("Draw pixel in x=%d Y=%d\n", X, Y);
+//	uprintf("Draw pixel in x=%d Y=%d\n", X, Y);
 	
-//	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
+	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
 	
 	//ADDRESS	
 	ILI9341_writeCommand(0x2A);
 
 	//XDATA
-	PIN_SET(LCD_DC);
-	tempBuffer[0] = (uint8_t)(X >> 8);
-	tempBuffer[1] = (uint8_t)(X);
-	tempBuffer[2] = (uint8_t)((X+1) >> 8);
-	tempBuffer[3] = (uint8_t)(X+1);
-	ILI9341_spiSend( tempBuffer, rxBuff, 4);
-	
+	ILI9341_writeData( (uint8_t)(X >> 8));
+	ILI9341_writeData( (uint8_t)(X));
+	ILI9341_writeData( (uint8_t)((X+1) >> 8));
+	ILI9341_writeData( (uint8_t)(X+1) );
+
 	//ADDRESS
 	ILI9341_writeCommand(0x2B);
-
 					
 	//YDATA
-	PIN_SET(LCD_DC);	
-	tempBuffer[0] = (uint8_t)(Y >> 8);
-	tempBuffer[1] = (uint8_t)(Y);
-	tempBuffer[2] = (uint8_t)((Y+1) >> 8);
-	tempBuffer[3] = (uint8_t)(Y+1);
-	ILI9341_spiSend( tempBuffer, rxBuff, 4);
+	ILI9341_writeData( (uint8_t)(Y >> 8) );
+	ILI9341_writeData( (uint8_t)(Y) );
+	ILI9341_writeData( (uint8_t)((Y+1) >> 8) );
+	ILI9341_writeData( (uint8_t)(Y+1) );
 
 	//ADDRESS	
 	ILI9341_writeCommand(0x2C);
 						
 	//COLOUR	
 	PIN_SET(LCD_DC);
-	tempBuffer[0] = (uint8_t)(Colour >> 8);
-	tempBuffer[1] = (uint8_t)(Colour);
-	ILI9341_spiSend( tempBuffer, rxBuff, 2);		
+	ILI9341_writeData( (uint8_t)(Colour >> 8) );
+	ILI9341_writeData( (uint8_t)(Colour) );		
+}
+
+void LCD_fill(uint16_t color);
+
+coid LCD_fill(uint16_t color)
+{
+	
+
 }
 
 
@@ -272,18 +271,14 @@ void ILI9341_init(void)
 	ILI9341_reset();
 
 
-
-
-
-
 	ILI9341_writeCommand(0x01); // Sleep out, also SW reset
         DELAY(150000);
 
         ILI9341_writeCommand(0x3A); // Interface Pixel Format
         ILI9341_writeData(0x55);
 
-      //  ILI9341_writeCommand(0xC2); // Power Control 3 (For Normal Mode)
-      //  ILI9341_writeData(0x44);
+        ILI9341_writeCommand(0xC2); // Power Control 3 (For Normal Mode)
+        ILI9341_writeData(0x44);
 
         ILI9341_writeCommand(0xC5); // VCOM Control
         ILI9341_writeData(0x00);
@@ -360,11 +355,11 @@ void ILI9341_init(void)
 	int x;
 	int y;
 	
-	for ( x = 0 ; x < 50; x++ )
+	for ( x = 0 ; x < 320; x++ )
 	{	
-		for ( y = 0 ; y < 50 ; y ++ )
+		for ( y = 0 ; y < 480 ; y ++ )
 		{
-			ILI9341_drawPixel(x, y, 0x3312);
+			ILI9341_drawPixel(x, y, 0xFFFF);
 		}
 	} 
 	ILI9341_drawPixel(100, 100, 0xFFFF);
