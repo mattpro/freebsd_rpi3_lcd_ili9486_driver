@@ -50,6 +50,8 @@ DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
 /* Adds LCD to SPI bus. */
 static int lcd_probe(device_t dev)
 {
+
+
   device_set_desc(dev, "Lcd MattPro");
   return (BUS_PROBE_SPECIFIC); /* Only I can use this device. */
 }
@@ -86,7 +88,6 @@ static int lcd_shutdown(device_t dev)
 
 
 
-
 void lcd_send(uint8_t byte)
 {
     struct spi_command spi_cmd;
@@ -99,6 +100,16 @@ void lcd_send(uint8_t byte)
     SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 }
 
+void lcd_reset( void )
+{
+	PIN_SET(LCD_RST);
+	DELAY(50000);
+	PIN_RESET(LCD_RST);
+	DELAY(100000);
+	PIN_SET(LCD_RST);
+	DELAY(100);
+}
+
 
 void lcd_init(void)
 {
@@ -106,6 +117,13 @@ void lcd_init(void)
 	
 	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	
+	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_RS_PIN_NUMBER, GPIO_PIN_OUTPUT);
+	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_RST_PIN_NUMBER, GPIO_PIN_OUTPUT); 
+
+	lcd_reset();
+
+
+
 	for( i = 0 ; i < 10 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
