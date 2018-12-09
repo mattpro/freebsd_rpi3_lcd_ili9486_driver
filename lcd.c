@@ -1,4 +1,3 @@
-
 #include <sys/param.h>  
 #include <sys/module.h>
 #include <sys/kernel.h>
@@ -149,13 +148,15 @@ void ILI9341_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen)
 void ILI9341_writeCommand(uint8_t command)
 {
 	PIN_RESET(LCD_DC);
+//	DELAY(100);
 	ILI9341_spiSendByte(command);
 }
 
 /* Send Data (char) to LCD */
 void ILI9341_writeData(uint8_t Data)
 {
-	PIN_SET(LCD_DC);	
+	PIN_SET(LCD_DC);
+//	DELAY(100);	
 	ILI9341_spiSendByte(Data);	
 }
 
@@ -181,22 +182,22 @@ void ILI9341_setRotation(uint8_t rotation)
 	switch(rotation) 
 	{
 		case SCREEN_VERTICAL_1:
-			ILI9341_writeData(0x40|0x08);
+			ILI9341_writeData(0x48);
 			LCD_WIDTH = 240;
 			LCD_HEIGHT = 320;
 			break;
 		case SCREEN_HORIZONTAL_1:
-			ILI9341_writeData(0x20|0x08);
+			ILI9341_writeData(0x28);
 			LCD_WIDTH  = 320;
 			LCD_HEIGHT = 240;
 			break;
 		case SCREEN_VERTICAL_2:
-			ILI9341_writeData(0x80|0x08);
+			ILI9341_writeData(0x98);
 			LCD_WIDTH  = 240;
 			LCD_HEIGHT = 320;
 			break;
 		case SCREEN_HORIZONTAL_2:
-			ILI9341_writeData(0x40|0x80|0x20|0x08);
+			ILI9341_writeData(0xF8);
 			LCD_WIDTH  = 320;
 			LCD_HEIGHT = 240;
 			break;
@@ -210,26 +211,26 @@ void ILI9341_setRotation(uint8_t rotation)
 void ILI9341_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour) 
 {
 	uint8_t tempBuffer[4];
+	uint8_t rxBuff[4];
 
-	uprintf("Draw pixel\n");
+	uprintf("Draw pixel in x=%d Y=%d\n", X, Y);
 	
-	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
+//	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
 	
-	//ADDRESS
-	PIN_RESET(LCD_DC);
-	ILI9341_spiSendByte(0x2A);
-	
+	//ADDRESS	
+	ILI9341_writeCommand(0x2A);
+
 	//XDATA
 	PIN_SET(LCD_DC);
 	tempBuffer[0] = (uint8_t)(X >> 8);
 	tempBuffer[1] = (uint8_t)(X);
 	tempBuffer[2] = (uint8_t)((X+1) >> 8);
 	tempBuffer[3] = (uint8_t)(X+1);
-	ILI9341_spiSend( tempBuffer, NULL, 4);
+	ILI9341_spiSend( tempBuffer, rxBuff, 4);
 	
 	//ADDRESS
-	PIN_RESET(LCD_DC);
-	ILI9341_spiSendByte(0x2B);
+	ILI9341_writeCommand(0x2B);
+
 					
 	//YDATA
 	PIN_SET(LCD_DC);	
@@ -237,17 +238,16 @@ void ILI9341_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour)
 	tempBuffer[1] = (uint8_t)(Y);
 	tempBuffer[2] = (uint8_t)((Y+1) >> 8);
 	tempBuffer[3] = (uint8_t)(Y+1);
-	ILI9341_spiSend( tempBuffer, NULL, 4);
+	ILI9341_spiSend( tempBuffer, rxBuff, 4);
 
 	//ADDRESS	
-	PIN_RESET(LCD_DC);
-	ILI9341_spiSendByte(0x2C);
-							
+	ILI9341_writeCommand(0x2C);
+						
 	//COLOUR	
 	PIN_SET(LCD_DC);
 	tempBuffer[0] = (uint8_t)(Colour >> 8);
 	tempBuffer[1] = (uint8_t)(Colour);
-	ILI9341_spiSend( tempBuffer, NULL, 2);		
+	ILI9341_spiSend( tempBuffer, rxBuff, 2);		
 }
 
 
@@ -276,65 +276,99 @@ void ILI9341_init(void)
 
 
 
-		ILI9341_writeCommand(0x11); // Sleep out, also SW reset
-        DELAY(12000);
+	ILI9341_writeCommand(0x01); // Sleep out, also SW reset
+        DELAY(150000);
 
         ILI9341_writeCommand(0x3A); // Interface Pixel Format
-        ILI9341_spiSendByte(0x55);
+        ILI9341_writeData(0x55);
 
-        ILI9341_writeCommand(0xC2); // Power Control 3 (For Normal Mode)
-        ILI9341_spiSendByte(0x44);
+      //  ILI9341_writeCommand(0xC2); // Power Control 3 (For Normal Mode)
+      //  ILI9341_writeData(0x44);
 
         ILI9341_writeCommand(0xC5); // VCOM Control
-        ILI9341_spiSendByte(0x00);
-        ILI9341_spiSendByte(0x00);
-        ILI9341_spiSendByte(0x00);
-        ILI9341_spiSendByte(0x00);
+        ILI9341_writeData(0x00);
+        ILI9341_writeData(0x48);
+        ILI9341_writeData(0x00);
+        ILI9341_writeData(0x48);
 
         ILI9341_writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
-        ILI9341_spiSendByte(0x0F);
-        ILI9341_spiSendByte(0x1F);
-        ILI9341_spiSendByte(0x1C);
-        ILI9341_spiSendByte(0x0C);
-        ILI9341_spiSendByte(0x0F);
-        ILI9341_spiSendByte(0x08);
-        ILI9341_spiSendByte(0x48);
-        ILI9341_spiSendByte(0x98);
-        ILI9341_spiSendByte(0x37);
-        ILI9341_spiSendByte(0x0A);
-        ILI9341_spiSendByte(0x13);
-        ILI9341_spiSendByte(0x04);
-        ILI9341_spiSendByte(0x11);
-        ILI9341_spiSendByte(0x0D);
-        ILI9341_spiSendByte(0x00);
+        ILI9341_writeData(0x0F);
+        ILI9341_writeData(0x1F);
+        ILI9341_writeData(0x1C);
+        ILI9341_writeData(0x0C);
+        ILI9341_writeData(0x0F);
+        ILI9341_writeData(0x08);
+        ILI9341_writeData(0x48);
+        ILI9341_writeData(0x98);
+        ILI9341_writeData(0x37);
+        ILI9341_writeData(0x0A);
+        ILI9341_writeData(0x13);
+        ILI9341_writeData(0x04);
+        ILI9341_writeData(0x11);
+        ILI9341_writeData(0x0D);
+        ILI9341_writeData(0x00);
 
         ILI9341_writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
-        ILI9341_spiSendByte(0x0F);
-        ILI9341_spiSendByte(0x32);
-        ILI9341_spiSendByte(0x2E);
-        ILI9341_spiSendByte(0x0B);
-        ILI9341_spiSendByte(0x0D);
-        ILI9341_spiSendByte(0x05);
-        ILI9341_spiSendByte(0x47);
-        ILI9341_spiSendByte(0x75);
-        ILI9341_spiSendByte(0x37);
-        ILI9341_spiSendByte(0x06);
-        ILI9341_spiSendByte(0x10);
-        ILI9341_spiSendByte(0x03);
-        ILI9341_spiSendByte(0x24);
-        ILI9341_spiSendByte(0x20);
-        ILI9341_spiSendByte(0x00);
+        ILI9341_writeData(0x0F);
+        ILI9341_writeData(0x32);
+        ILI9341_writeData(0x2E);
+        ILI9341_writeData(0x0B);
+        ILI9341_writeData(0x0D);
+        ILI9341_writeData(0x05);
+        ILI9341_writeData(0x47);
+        ILI9341_writeData(0x75);
+        ILI9341_writeData(0x37);
+        ILI9341_writeData(0x06);
+        ILI9341_writeData(0x10);
+        ILI9341_writeData(0x03);
+        ILI9341_writeData(0x24);
+        ILI9341_writeData(0x20);
+        ILI9341_writeData(0x00);
+
+	ILI9341_writeCommand(0x11);
+
+	DELAY(150000);	
 
         ILI9341_writeCommand(0x20); // Display Inversion OFF   RPi LCD (A)
 //      ILI9341_writeCommand(0x21); // Display Inversion ON    RPi LCD (B)
 
         ILI9341_writeCommand(0x36); // Memory Access Control
-        ILI9341_spiSendByte(0x48);
+        ILI9341_writeData(0x48);
 
         ILI9341_writeCommand(0x29); // Display ON
         DELAY(150000);
 
+	ILI9341_writeCommand(0x2A);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x01);
+	ILI9341_writeData(0x3F);
 
+	ILI9341_writeCommand(0x2B);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x00);
+	ILI9341_writeData(0x01);
+	ILI9341_writeData(0xE0);
+
+
+	DELAY(120000);
+
+	ILI9341_writeCommand(0x2C);
+	
+	ILI9341_setRotation(0);
+
+	int x;
+	int y;
+	
+	for ( x = 0 ; x < 50; x++ )
+	{	
+		for ( y = 0 ; y < 50 ; y ++ )
+		{
+			ILI9341_drawPixel(x, y, 0x3312);
+		}
+	} 
+	ILI9341_drawPixel(100, 100, 0xFFFF);
+	
 
 
 /*
