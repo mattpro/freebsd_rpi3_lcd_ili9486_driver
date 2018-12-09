@@ -22,8 +22,9 @@ struct lcd_sc_t
 };
 
 
-#define PIN_SET( pin )		GPIO_PIN_SET( lcd_sc->dev, pin##_PIN_NUMBER, GPIO_PIN_HIGH)
-#define PIN_RESET( pin )	GPIO_PIN_SET( lcd_sc->dev, pin##_PIN_NUMBER, GPIO_PIN_LOW)
+
+#define PIN_SET( pin )		GPIO_PIN_SET( lcd_sc->dev_gpio, pin##_PIN_NUMBER, GPIO_PIN_HIGH)
+#define PIN_RESET( pin )	GPIO_PIN_SET( lcd_sc->dev_gpio, pin##_PIN_NUMBER, GPIO_PIN_LOW)
 
 
 

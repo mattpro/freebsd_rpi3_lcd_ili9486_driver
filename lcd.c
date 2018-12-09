@@ -163,12 +163,11 @@ void ILI9341_writeData(uint8_t Data)
 void ILI9341_reset( void )
 {
 	uprintf("LCD Reset \n");
-	PIN_SET(LCD_RST);
-	DELAY(50000);
+
 	PIN_RESET(LCD_RST);
-	DELAY(100000);
+	DELAY(200000);
 	PIN_SET(LCD_RST);
-	DELAY(100);
+	DELAY(200000);
 }
 
 /*Ser rotation of the screen - changes x0 and y0*/
@@ -254,14 +253,15 @@ void ILI9341_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour)
 
 void ILI9341_init(void)
 {
-	int i;
+	volatile int i;
 	
 	uprintf("LCD init start ... \n");
-	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);	
+	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);	
 	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_DC_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_RST_PIN_NUMBER, GPIO_PIN_OUTPUT); 
+
 	
-	/* only for test */
+	// only for test 
 	for( i = 0 ; i < 10 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
@@ -401,6 +401,53 @@ void ILI9341_init(void)
 	//STARTING ROTATION
 	ILI9341_setRotation(SCREEN_VERTICAL_1);
 	uprintf("LCD init end ... \n");
+	
+	ILI9341_drawPixel(100,100, 0xFFFF);
+	ILI9341_drawPixel(100,105, 0xFFFF);
+
+	/*
+	uprintf("Test Spi multiple send \n");
+	uint8_t txData[10];
+	uint8_t rxData[10];
+	for ( i = 0 ; i < 1000 ; i ++ )
+	{
+		txData[0] = i;
+		txData[1] = i;
+		txData[2] = i;
+		txData[3] = i;
+		txData[4] = i;
+		ILI9341_spiSend(txData, NULL, 5);
+		DELAY(10000);
+
+	}
+
+	uprintf("Test SPI Byte \n");
+	for( i = 0 ; i < 1000 ; i ++ )
+	{	
+		ILI9341_spiSendByte(i);
+		DELAY(10000);
+	}
+
+
+	int k;
+	uprintf("LCD DC PIN TEST \n");
+	for (k = 0 ;  k < 100 ; k ++ )
+	{
+		PIN_SET(LCD_DC);
+		DELAY(10000);
+		PIN_RESET(LCD_DC);
+		DELAY(10000);
+	}
+	uprintf("LCD RS PIN TEST  \n");
+	int o;
+	for ( o = 0 ; o < 100 ; o ++ )
+	{	
+		PIN_SET(LCD_RST);	
+		DELAY(10000);
+		PIN_RESET(LCD_RST);
+		DELAY(10000);
+	}
+	*/
 }
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
