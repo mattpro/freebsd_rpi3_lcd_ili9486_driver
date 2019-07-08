@@ -25,12 +25,6 @@ struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
-//static struct cdevsw lcd_cdevsw =
-//{
-//    .d_version = D_VERSION,
-//    .d_write   = lcd_write,
-//    .d_name    = "lcdRpi"
-//};
 
 static device_method_t lcd_methods[] =
   {
@@ -70,13 +64,9 @@ static int lcd_attach(device_t dev)
 		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
 		return (1);
     }
-//    mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
+    mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
     lcd_init();
-//    lcd_sc->cdev_p = make_dev(&lcd_cdevsw,
-//							device_get_unit(dev),
-//							UID_ROOT,
-//							GID_WHEEL,
-//							0600, "lcdRPi");
+
     return(0);
 }
 
@@ -97,12 +87,6 @@ static int lcd_shutdown(device_t dev)
 
 
 
-
-void lcd_do_reset(void)
-{
-
-}
-
 void lcd_send(uint8_t byte)
 {
     struct spi_command spi_cmd;
@@ -115,45 +99,6 @@ void lcd_send(uint8_t byte)
     SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 }
 
-void lcd_send_cmd(uint8_t cmd)
-{
-
-}
-
-void lcd_send_data(uint8_t *data, int len)
-{
-
-}
-
-void lcd_render(void)
-{
-
-}
-
-void lcd_set_pixel(uint8_t x, uint8_t y, uint8_t value)
-{
-
-}
-
-void lcd_set_cursor(uint8_t x, uint8_t y)
-{
-
-}
-
-void lcd_clear(void)
-{
-
-}
-
-void lcd_write_char(char code, uint8_t scale)
-{
-   
-}
-
-void lcd_write_string(const char *str, uint8_t scale)
-{
-
-}
 
 void lcd_init(void)
 {
