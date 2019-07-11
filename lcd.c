@@ -15,6 +15,9 @@
 #include <sys/lock.h>
 #include <sys/mutex.h>
 
+#include <dev/ofw/ofw_bus_subr.h>
+#include <dev/ofw/openfirm.h>
+
 #include "spibus_if.h"
 #include "gpio_if.h"
 
@@ -24,6 +27,11 @@
 struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
+
+
+/* Zmienne dotyczace LCD */
+volatile uint16_t LCD_HEIGHT = ILI9341_SCREEN_HEIGHT;
+volatile uint16_t LCD_WIDTH	 = ILI9341_SCREEN_WIDTH;
 
 
 static device_method_t lcd_methods[] =
@@ -37,24 +45,47 @@ static device_method_t lcd_methods[] =
   
 static driver_t lcd_driver =
   {
-    "lcdRpiX", 					/* driver’s official name */
+    "lcdRpi", 					/* driver’s official name */
     lcd_methods, 			/* device method table */
     sizeof(struct  lcd_sc_t)
   };
+
+static struct ofw_compat_data compat_data[] = {
+	{ "mattpro,lcd", 	1 },
+	{ "mattpro,touch", 	1},
+	{ NULL, 		0},
+};
+
 
 /* Register LCD Newbus driver */
 DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
 
 
 
+
 /* Adds LCD to SPI bus. */
 static int lcd_probe(device_t dev)
 {
+	int rv;
 
+	if( !ofw_bus_status_okay(dev) )
+	{
+		return (ENXIO);
+	}
 
-  device_set_desc(dev, "Lcd MattPro");
-  return (BUS_PROBE_SPECIFIC); /* Only I can use this device. */
+	if( ofw_bus_search_compatible(dev, compat_data)->ocd_data == 0 )
+	{ 
+		return (ENXIO);
+	}
+
+	rv = BUS_PROBE_DEFAULT;
+
+    uprintf("LCD Probe \n");
+  	device_set_desc(dev, "Lcd MattPro");
+  	return (rv); /* Only I can use this device. */
 }
+
+
 
 static int lcd_attach(device_t dev)
 {
@@ -67,7 +98,7 @@ static int lcd_attach(device_t dev)
 		return (1);
     }
     mtx_init(&lcd_sc->mtx, "LCD Mutex", NULL, MTX_DEF);
-    lcd_init();
+    ILI9341_init();
 
     return(0);
 }
@@ -75,7 +106,6 @@ static int lcd_attach(device_t dev)
 static int lcd_detach(device_t dev)
 {
     mtx_destroy(&lcd_sc->mtx);
-//    destroy_dev(lcd_sc->cdev_p);
     return(0);
 }
 
@@ -88,7 +118,8 @@ static int lcd_shutdown(device_t dev)
 
 
 
-void lcd_send(uint8_t byte)
+/* LCD CONTROL */
+void ILI9341_spiSendByte(uint8_t byte)
 {
     struct spi_command spi_cmd;
     uint8_t temp;
@@ -100,8 +131,38 @@ void lcd_send(uint8_t byte)
     SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 }
 
-void lcd_reset( void )
+
+void ILI9341_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen)
 {
+    struct spi_command spi_cmd;
+	
+    memset(&spi_cmd, 0, sizeof(struct spi_command));
+    spi_cmd.tx_data = txData;
+    spi_cmd.rx_data = rxData;
+    spi_cmd.rx_data_sz = dataLen;
+    spi_cmd.tx_data_sz = dataLen;
+    SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+}
+
+
+/* Send command (char) to LCD  - OK */
+void ILI9341_writeCommand(uint8_t command)
+{
+	PIN_RESET(LCD_DC);
+	ILI9341_spiSendByte(command);
+}
+
+/* Send Data (char) to LCD */
+void ILI9341_writeData(uint8_t Data)
+{
+	PIN_SET(LCD_DC);	
+	ILI9341_spiSendByte(Data);	
+}
+
+/* Reset LCD */
+void ILI9341_reset( void )
+{
+	uprintf("LCD Reset \n");
 	PIN_SET(LCD_RST);
 	DELAY(50000);
 	PIN_RESET(LCD_RST);
@@ -110,26 +171,236 @@ void lcd_reset( void )
 	DELAY(100);
 }
 
+/*Ser rotation of the screen - changes x0 and y0*/
+void ILI9341_setRotation(uint8_t rotation) 
+{
+	uprintf("LCD set rotation = %d \n", rotation);
 
-void lcd_init(void)
+	ILI9341_Write_Command(0x36);
+	DELAY(1000);
+		
+	switch(rotation) 
+	{
+		case SCREEN_VERTICAL_1:
+			ILI9341_Write_Data(0x40|0x08);
+			LCD_WIDTH = 240;
+			LCD_HEIGHT = 320;
+			break;
+		case SCREEN_HORIZONTAL_1:
+			ILI9341_Write_Data(0x20|0x08);
+			LCD_WIDTH  = 320;
+			LCD_HEIGHT = 240;
+			break;
+		case SCREEN_VERTICAL_2:
+			ILI9341_Write_Data(0x80|0x08);
+			LCD_WIDTH  = 240;
+			LCD_HEIGHT = 320;
+			break;
+		case SCREEN_HORIZONTAL_2:
+			ILI9341_Write_Data(0x40|0x80|0x20|0x08);
+			LCD_WIDTH  = 320;
+			LCD_HEIGHT = 240;
+			break;
+		default:
+			//EXIT IF SCREEN ROTATION NOT VALID!
+			break;
+	}
+}
+
+
+void ILI9341_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour) 
+{
+	uint8_t tempBuffer[4];
+
+	uprintf("Draw pixel\n");
+	
+	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
+	
+	//ADDRESS
+	PIN_RESET(LCD_DC);
+	ILI9341_spiSendByte(0x2A);
+	
+	//XDATA
+	PIN_SET(LCD_DC);
+	tempBuffer[0] = (uint8_t)(X >> 8);
+	tempBuffer[1] = (uint8_t)(X);
+	tempBuffer[2] = (uint8_t)((X+1) >> 8);
+	tempBuffer[3] = (uint8_t)(X+1);
+	ILI9341_spiSend( tempBuffer, NULL, 4);
+	
+	//ADDRESS
+	PIN_RESET(LCD_DC);
+	ILI9341_spiSendByte(0x2B);
+					
+	//YDATA
+	PIN_SET(LCD_DC);	
+	tempBuffer[0] = (uint8_t)(Y >> 8);
+	tempBuffer[1] = (uint8_t)(Y);
+	tempBuffer[2] = (uint8_t)((Y+1) >> 8);
+	tempBuffer[3] = (uint8_t)(Y+1);
+	ILI9341_spiSend( tempBuffer, NULL, 4);
+
+	//ADDRESS	
+	PIN_RESET(LCD_DC);
+	ILI9341_spiSendByte(0x2C);
+							
+	//COLOUR	
+	PIN_SET(LCD_DC);
+	tempBuffer[0] = (uint8_t)(Colour >> 8);
+	tempBuffer[1] = (uint8_t)(Colour);
+	ILI9341_spiSend( tempBuffer, NULL, 2);		
+}
+
+
+void ILI9341_init(void)
 {
 	int i;
 	
-	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);
-	
-	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_RS_PIN_NUMBER, GPIO_PIN_OUTPUT);
+	uprintf("LCD init start ... \n");
+	GPIO_PIN_SETFLAGS(lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);	
+	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_DC_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_RST_PIN_NUMBER, GPIO_PIN_OUTPUT); 
-
-	lcd_reset();
-
-
-
+	
+	/* only for test */
 	for( i = 0 ; i < 10 ; i ++ )
 	{
 		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
 		lcd_send(i);
-		DELAY(100000);
+		DELAY(10000);
 	}
+
+	ILI9341_Reset();
+
+	//SOFTWARE RESET
+	ILI9341_Write_Command(0x01);
+	DELAY(1000000);
+		
+	//POWER CONTROL A
+	ILI9341_Write_Command(0xCB);
+	ILI9341_Write_Data(0x39);
+	ILI9341_Write_Data(0x2C);
+	ILI9341_Write_Data(0x00);
+	ILI9341_Write_Data(0x34);
+	ILI9341_Write_Data(0x02);
+
+	//POWER CONTROL B
+	ILI9341_Write_Command(0xCF);
+	ILI9341_Write_Data(0x00);
+	ILI9341_Write_Data(0xC1);
+	ILI9341_Write_Data(0x30);
+
+	//DRIVER TIMING CONTROL A
+	ILI9341_Write_Command(0xE8);
+	ILI9341_Write_Data(0x85);
+	ILI9341_Write_Data(0x00);
+	ILI9341_Write_Data(0x78);
+
+	//DRIVER TIMING CONTROL B
+	ILI9341_Write_Command(0xEA);
+	ILI9341_Write_Data(0x00);
+	ILI9341_Write_Data(0x00);
+
+	//POWER ON SEQUENCE CONTROL
+	ILI9341_Write_Command(0xED);
+	ILI9341_Write_Data(0x64);
+	ILI9341_Write_Data(0x03);
+	ILI9341_Write_Data(0x12);
+	ILI9341_Write_Data(0x81);
+
+	//PUMP RATIO CONTROL
+	ILI9341_Write_Command(0xF7);
+	ILI9341_Write_Data(0x20);
+
+	//POWER CONTROL,VRH[5:0]
+	ILI9341_Write_Command(0xC0);
+	ILI9341_Write_Data(0x23);
+
+	//POWER CONTROL,SAP[2:0];BT[3:0]
+	ILI9341_Write_Command(0xC1);
+	ILI9341_Write_Data(0x10);
+
+	//VCM CONTROL
+	ILI9341_Write_Command(0xC5);
+	ILI9341_Write_Data(0x3E);
+	ILI9341_Write_Data(0x28);
+
+	//VCM CONTROL 2
+	ILI9341_Write_Command(0xC7);
+	ILI9341_Write_Data(0x86);
+
+	//MEMORY ACCESS CONTROL
+	ILI9341_Write_Command(0x36);
+	ILI9341_Write_Data(0x48);
+
+	//PIXEL FORMAT
+	ILI9341_Write_Command(0x3A);
+	ILI9341_Write_Data(0x55);
+
+	//FRAME RATIO CONTROL, STANDARD RGB COLOR
+	ILI9341_Write_Command(0xB1);
+	ILI9341_Write_Data(0x00);
+	ILI9341_Write_Data(0x18);
+
+	//DISPLAY FUNCTION CONTROL
+	ILI9341_Write_Command(0xB6);
+	ILI9341_Write_Data(0x08);
+	ILI9341_Write_Data(0x82);
+	ILI9341_Write_Data(0x27);
+
+	//3GAMMA FUNCTION DISABLE
+	ILI9341_Write_Command(0xF2);
+	ILI9341_Write_Data(0x00);
+
+	//GAMMA CURVE SELECTED
+	ILI9341_Write_Command(0x26);
+	ILI9341_Write_Data(0x01);
+
+	//POSITIVE GAMMA CORRECTION
+	ILI9341_Write_Command(0xE0);
+	ILI9341_Write_Data(0x0F);
+	ILI9341_Write_Data(0x31);
+	ILI9341_Write_Data(0x2B);
+	ILI9341_Write_Data(0x0C);
+	ILI9341_Write_Data(0x0E);
+	ILI9341_Write_Data(0x08);
+	ILI9341_Write_Data(0x4E);
+	ILI9341_Write_Data(0xF1);
+	ILI9341_Write_Data(0x37);
+	ILI9341_Write_Data(0x07);
+	ILI9341_Write_Data(0x10);
+	ILI9341_Write_Data(0x03);
+	ILI9341_Write_Data(0x0E);
+	ILI9341_Write_Data(0x09);
+	ILI9341_Write_Data(0x00);
+
+	//NEGATIVE GAMMA CORRECTION
+	ILI9341_Write_Command(0xE1);
+	ILI9341_Write_Data(0x00);
+	ILI9341_Write_Data(0x0E);
+	ILI9341_Write_Data(0x14);
+	ILI9341_Write_Data(0x03);
+	ILI9341_Write_Data(0x11);
+	ILI9341_Write_Data(0x07);
+	ILI9341_Write_Data(0x31);
+	ILI9341_Write_Data(0xC1);
+	ILI9341_Write_Data(0x48);
+	ILI9341_Write_Data(0x08);
+	ILI9341_Write_Data(0x0F);
+	ILI9341_Write_Data(0x0C);
+	ILI9341_Write_Data(0x31);
+	ILI9341_Write_Data(0x36);
+	ILI9341_Write_Data(0x0F);
+
+	//EXIT SLEEP
+	ILI9341_Write_Command(0x11);
+	DELAY(100000)
+
+	//TURN ON DISPLAY
+	ILI9341_Write_Command(0x29);
+
+	//STARTING ROTATION
+	ILI9341_Set_Rotation(SCREEN_VERTICAL_1);
+	uprintf("LCD init end ... \n");
 }
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
