@@ -271,6 +271,74 @@ void ILI9341_init(void)
 
 	ILI9341_reset();
 
+
+
+
+
+
+		ILI9341_writeCommand(0x11); // Sleep out, also SW reset
+        DELAY(12000);
+
+        ILI9341_writeCommand(0x3A); // Interface Pixel Format
+        ILI9341_spiSendByte(0x55);
+
+        ILI9341_writeCommand(0xC2); // Power Control 3 (For Normal Mode)
+        ILI9341_spiSendByte(0x44);
+
+        ILI9341_writeCommand(0xC5); // VCOM Control
+        ILI9341_spiSendByte(0x00);
+        ILI9341_spiSendByte(0x00);
+        ILI9341_spiSendByte(0x00);
+        ILI9341_spiSendByte(0x00);
+
+        ILI9341_writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
+        ILI9341_spiSendByte(0x0F);
+        ILI9341_spiSendByte(0x1F);
+        ILI9341_spiSendByte(0x1C);
+        ILI9341_spiSendByte(0x0C);
+        ILI9341_spiSendByte(0x0F);
+        ILI9341_spiSendByte(0x08);
+        ILI9341_spiSendByte(0x48);
+        ILI9341_spiSendByte(0x98);
+        ILI9341_spiSendByte(0x37);
+        ILI9341_spiSendByte(0x0A);
+        ILI9341_spiSendByte(0x13);
+        ILI9341_spiSendByte(0x04);
+        ILI9341_spiSendByte(0x11);
+        ILI9341_spiSendByte(0x0D);
+        ILI9341_spiSendByte(0x00);
+
+        ILI9341_writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
+        ILI9341_spiSendByte(0x0F);
+        ILI9341_spiSendByte(0x32);
+        ILI9341_spiSendByte(0x2E);
+        ILI9341_spiSendByte(0x0B);
+        ILI9341_spiSendByte(0x0D);
+        ILI9341_spiSendByte(0x05);
+        ILI9341_spiSendByte(0x47);
+        ILI9341_spiSendByte(0x75);
+        ILI9341_spiSendByte(0x37);
+        ILI9341_spiSendByte(0x06);
+        ILI9341_spiSendByte(0x10);
+        ILI9341_spiSendByte(0x03);
+        ILI9341_spiSendByte(0x24);
+        ILI9341_spiSendByte(0x20);
+        ILI9341_spiSendByte(0x00);
+
+        ILI9341_writeCommand(0x20); // Display Inversion OFF   RPi LCD (A)
+//      ILI9341_writeCommand(0x21); // Display Inversion ON    RPi LCD (B)
+
+        ILI9341_writeCommand(0x36); // Memory Access Control
+        ILI9341_spiSendByte(0x48);
+
+        ILI9341_writeCommand(0x29); // Display ON
+        DELAY(150000);
+
+
+
+
+/*
+
 	//SOFTWARE RESET
 	ILI9341_writeCommand(0x01);
 	DELAY(1000000);
@@ -404,7 +472,7 @@ void ILI9341_init(void)
 	
 	ILI9341_drawPixel(100,100, 0xFFFF);
 	ILI9341_drawPixel(100,105, 0xFFFF);
-
+	*/
 	/*
 	uprintf("Test Spi multiple send \n");
 	uint8_t txData[10];
