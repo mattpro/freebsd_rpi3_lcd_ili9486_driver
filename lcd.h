@@ -1,17 +1,17 @@
 // Hardware connections
-#define LED_PIN_NUMBER		26
+#define LED_PIN_NUMBER			26
 
-#define LCD_DC_PIN_NUMBER	24
-#define LCD_RST_PIN_NUMBER	25
+#define LCD_DC_PIN_NUMBER		24
+#define LCD_RST_PIN_NUMBER		25
 
 
-#define ILI9341_SCREEN_HEIGHT 	240 
-#define ILI9341_SCREEN_WIDTH 	320
+#define LCD_SCREEN_HEIGHT 		320 
+#define LCD_SCREEN_WIDTH 		480
 
-#define SCREEN_VERTICAL_1			0
-#define SCREEN_HORIZONTAL_1			1
-#define SCREEN_VERTICAL_2			2
-#define SCREEN_HORIZONTAL_2			3
+#define SCREEN_VERTICAL_1		0
+#define SCREEN_HORIZONTAL_1		1
+#define SCREEN_VERTICAL_2		2
+#define SCREEN_HORIZONTAL_2		3
 
 
 struct lcd_sc_t
@@ -28,16 +28,16 @@ struct lcd_sc_t
 
 
 
-void ILI9341_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen);
-void ILI9341_spiSendByte(unsigned char SPI_Data);
-void ILI9341_writeCommand(uint8_t Command);
-void ILI9341_writeData(uint8_t Data);
-void ILI9341_reset(void);
-void ILI9341_setRotation(uint8_t Rotation);
-void ILI9341_init(void);
-
-void ILI9341_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour);
-
+void LCD_spiSend(uint8_t* txData, uint8_t* rxData, uint32_t dataLen);
+void LCD_spiSendByte(unsigned char SPI_Data);
+void LCD_writeCommand(uint8_t Command);
+void LCD_writeData(uint8_t Data);
+void LCD_reset(void);
+void LCD_setRotation(uint8_t Rotation);
+void LCD_init(void);
+void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour);
+void LCD_fill(uint16_t color);
+void LCD_brightness(uint8_t brightness);
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag);
 static int lcd_probe(device_t dev);
