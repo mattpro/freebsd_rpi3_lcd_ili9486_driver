@@ -24,25 +24,12 @@
 
 #include "lcd.h"
 
-
-#define TSTATE_STOPPED 	0
-#define TSTATE_STOPPING 1
-#define TSTATE_RUNNING  2
-
-#define LCD_LOCK(_sc) 			mtx_lock( &(_sc)->mtx )
-#define LCD_UNLOCK(_sc) 		mtx_unlock( &(_sc)->mtx )
-#define LCD_LOCK_DESTROY(_sc) 		mtx_destroy( &(_sc)->mtx )
-#define LCD_ASSERT_LOCKED(_sc)  	mtx_assert( &(_sc)->mtx, MA_OWNED )
-#define LCD_ASSERT_UNLOCKED(_sc)	mtx_assert( &(_sc)->mtx, MA_NOTOWNED)
  
-
 struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
 uint16_t lcdBuffer[LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT];
-
-
 
 
 /* Zmienne dotyczace LCD */
@@ -81,8 +68,6 @@ static struct cdevsw lcd_cdevsw = {
 
 /* Register LCD Newbus driver */
 DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
-
-
 
 
 /* Adds LCD to SPI bus. */
@@ -134,7 +119,7 @@ static int lcd_attach(device_t dev )
     lcd_sc->dev = dev;
     lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
     if (lcd_sc->dev_gpio == NULL)
-   {
+    {
 		device_printf(lcd_sc->dev, "[LCD] Error: failed to get the GPIO dev\n");
 		return (1);
     }
@@ -174,16 +159,10 @@ static int lcd_shutdown(device_t dev)
 
 
 
-
 /* LCD CONTROL */
 void LCD_spiSendByte(uint8_t byte)
 {
     struct spi_command spi_cmd;
-//    uint8_t txData[2];
-//    uint8_t rxData[2];
-
-//    txData[0] =0;
-//    txData[1] = byte;
 
     memset(&spi_cmd, 0, sizeof(struct spi_command));
     spi_cmd.tx_data = &byte;
@@ -269,6 +248,13 @@ void LCD_setRotation(uint8_t rotation)
 	}
 }
 
+void LCD_brightness(uint8_t brightness)
+{
+	// chyba trzeba wczesniej zainicjalizowac - rejestr 0x53
+	LCD_writeCommand(0x51); // byc moze 2 bajty?
+	LCD_writeData(brightness); // byc moze 2 bajty
+}
+
 
 uint16_t setColor(uint8_t r, uint8_t g, uint8_t b)
 {
@@ -282,7 +268,7 @@ uint16_t setColor(uint8_t r, uint8_t g, uint8_t b)
 }
 
 
-void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour) 
+void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t colour) 
 {
 	if((X >=LCD_WIDTH) || (Y >=LCD_HEIGHT)) return;	//OUT OF BOUNDS!
 	
@@ -300,12 +286,12 @@ void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t Colour)
 
 	LCD_writeCommand(0x2C); // Memory write
 							
-	LCD_writeData( (uint8_t)(Colour >> 8) ); // maluj kolor
-	LCD_writeData( (uint8_t)(Colour) );		
+	LCD_writeData( (uint8_t)(colour >> 8) ); // maluj kolor
+	LCD_writeData( (uint8_t)(colour) );		
 }
 
 
-void LCD_fill(uint16_t color)
+void LCD_fill(uint16_t* buffer, uint16_t color)
 { 
 	struct spi_command spi_cmd;
 	int i;	
@@ -329,31 +315,55 @@ void LCD_fill(uint16_t color)
 	
 	LCD_writeCommand(0x2C); // Memory write?
 
-	
-    	memset(&spi_cmd, 0, sizeof(struct spi_command));
-    	spi_cmd.tx_data =(uint8_t*) lcdBuffer;
-    	spi_cmd.rx_data = NULL;
-    	spi_cmd.rx_data_sz = 0;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
-    	spi_cmd.tx_data_sz = 10240;// LCD_SCREEN_HEIGHT*LCD_SCREEN_WIDTH*2;
-	
-	
 	for ( i = 0 ; i < 30  ; i ++ )
 	{	
 		spi_cmd.tx_data = (uint8_t*)&lcdBuffer[5120*i];
 		spi_cmd.rx_data = NULL;
 		spi_cmd.tx_data_sz = 2 * 5120;
 		spi_cmd.rx_data_sz = 0;
-    		SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
-
+    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
 	}
 }
 
-void LCD_brightness(uint8_t brightness)
-{
-	// chyba trzeba wczesniej zainicjalizowac - rejestr 0x53
-	LCD_writeCommand(0x51); // byc moze 2 bajty?
-	LCD_writeData(brightness); // byc moze 2 bajty
+void LCD_showBuffer(uint16_t* buffer)
+{ 
+	struct spi_command spi_cmd;
+	int i;	
+
+	LCD_writeCommand(0x2A);
+	LCD_writeData(0x00);
+	LCD_writeData(0x00);
+	LCD_writeData(0x01);
+	LCD_writeData(0x3F);
+
+	LCD_writeCommand(0x2B);
+	LCD_writeData(0x00);
+	LCD_writeData(0x00);
+	LCD_writeData(0x01);
+	LCD_writeData(0xE0);
+	
+	LCD_writeCommand(0x2C); // Memory write?
+
+	for ( i = 0 ; i < 30  ; i ++ )
+	{	
+		spi_cmd.tx_data = (uint8_t*)&buffer[5120*i];
+		spi_cmd.rx_data = NULL;
+		spi_cmd.tx_data_sz = 2 * 5120;
+		spi_cmd.rx_data_sz = 0;
+    	SPIBUS_TRANSFER(device_get_parent(lcd_sc->dev), lcd_sc->dev, &spi_cmd);
+	}
 }
+
+void LCD_clear(uint16_t* buffer)
+{ 
+	LCD_fill(buffer, 0x0000);
+}
+	
+void LCD_bufferClear(uint16_t* buffer)
+{ 
+	memset(buffer, 0, LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT );
+}
+
 
 
 void LCD_init(void)
@@ -376,11 +386,10 @@ void LCD_init(void)
 
 	LCD_reset();
 
-
 //	LCD_writeCommand(0x01); // Soft Reset
 //	DELAY(150000);			// 15 ms wait
 
-//	LCD_writeCommand(0x28); // Display OFF
+	LCD_writeCommand(0x28); // Display OFF
 
 	LCD_writeCommand(0x3A); // Interface Pixel Format
 	LCD_writeData(0x55);	// 16 bit/pixel
@@ -440,26 +449,8 @@ void LCD_init(void)
 	LCD_writeCommand(0x29); // Display ON
 	DELAY(150000);
 
-/*
-	LCD_writeCommand(0x2B); // Column Address Set
-	LCD_writeData(0x00);
-	LCD_writeData(0x00);
-	LCD_writeData(0x01);
-	LCD_writeData(0x3F);
-
-	LCD_writeCommand(0x2A); // Row Address Set
-	LCD_writeData(0x00);
-	LCD_writeData(0x00);
-	LCD_writeData(0x01);
-	LCD_writeData(0xE0);
-
-
-	DELAY(120000);
-*/
-//	LCD_writeCommand(0x2C); // Memory write?
-//	LCD_writeCommand(0x3C); // Memory write continue
-	
 	LCD_setRotation(0);
+	
 /*
 	int x;
 	int y;
@@ -469,27 +460,41 @@ void LCD_init(void)
 	{	
 		for ( y = 0 ; y < 50 ; y ++ )
 		{
-			LCD_drawPixel(x, y, setColor(0xFF,0,0));
-			LCD_drawPixel( x+50,y, setColor( 0, 0xFF, 0 ) );
-			LCD_drawPixel(x+100, y, setColor( 0, 0, 0xFF ) );
+			LCD_drawPixel( x    , y, setColor( 0xFF, 0x00, 0x00 ) );
+			LCD_drawPixel( x+50 , y, setColor( 0x00, 0xFF, 0x00 ) );
+			LCD_drawPixel( x+100, y, setColor( 0x00, 0x00, 0xFF ) );
 		}
 	} 
 	DELAY(1000000);
 */
 
+	uprintf("Writre buffer test\n");
+	int u;
+	int k;
+	for ( u = 0 ; u < 10 ; u ++ )
+	{	
+		LCD_bufferClear();
+		for ( k = u*10 ; k < (u*10+20) ; k++ )
+		{
+			lcdBuffer[k] = setColor( 0xFF, 0x00, 0x00 );
+		}
+		
+		LCD_showBuffer(lcdBuffer);
+	}
 
+/*
 	uprintf("Fill LCD test\n");
 	int u;
 	for ( u = 0 ; u < 10 ; u ++ )
 	{
-		LCD_fill( setColor( 0xFF, 0x00, 0x00 ) );
+		LCD_fill( bufferLcd, setColor( 0xFF, 0x00, 0x00 ) );
 		DELAY(100000);
-		LCD_fill( setColor( 0x00, 0xFF, 0x00 ) );
+		LCD_fill( bufferLcd, setColor( 0x00, 0xFF, 0x00 ) );
 		DELAY(100000);
-		LCD_fill( setColor( 0x00, 0x00, 0xFF ) );
+		LCD_fill( bufferLcd, setColor( 0x00, 0x00, 0xFF ) );
 		DELAY(100000);
 	}
-
+*/
 	
 	/*
 	uprintf("Test Spi multiple send \n");
