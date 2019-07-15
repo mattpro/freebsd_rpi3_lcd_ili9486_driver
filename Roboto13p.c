@@ -36,7 +36,7 @@
      } tFont;
 */
 
-
+#include <sys/types.h>  
 #include "myFont.h" // tylko to trzeba dodac ;)
 
 

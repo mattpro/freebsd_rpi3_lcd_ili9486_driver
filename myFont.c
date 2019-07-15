@@ -1,4 +1,4 @@
-#include <string.h>
+#include <sys/types.h>  
 #include "myFont.h"
 
 
@@ -12,9 +12,9 @@ static void Font_SetPixel(uint8_t *buffer, uint32_t x, uint32_t y, uint8_t *colo
 static void Font_DrawBitmapFont(uint8_t *buffer, int x, int y, const tImage *image)
 {
     uint32_t x0, y0;
-    uint8_t *pdata;
+    const uint8_t *pdata;
 	
-		pdata = ( uint8_t *) image->data;
+	pdata = ( const uint8_t *) image->data;
     // rows
     for (y0 = 0; y0 < image->height; y0++)
     {

@@ -26,7 +26,8 @@
 #include "myFont.h"
 #include "lcd.h"
 
- 
+extern const tFont Robo13p;
+
 struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
@@ -460,7 +461,8 @@ void LCD_init(void)
 	
 	uprintf("Write text test \n");
 	
-	FONT_DrawStringHCenter(lcdBuffer, "Napis testowy", 120, 63, &Robo13p);
+	FONT_DrawString((uint8_t*)lcdBuffer, "Napis testowy", 63, 63, &Robo13p);
+	LCD_showBuffer(lcdBuffer);
 	
 	/*
 	int x;
