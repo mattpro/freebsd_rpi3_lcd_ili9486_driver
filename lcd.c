@@ -19,12 +19,15 @@
 #include <dev/ofw/ofw_bus_subr.h>
 #include <dev/ofw/openfirm.h>
 
+
 #include "spibus_if.h"
 #include "gpio_if.h"
 
+#include "myFont.h"
 #include "lcd.h"
 
- 
+extern const tFont Robo13p;
+
 struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
@@ -464,7 +467,13 @@ void LCD_init(void)
 
 	LCD_setRotation(0);
 	
-
+	
+	uprintf("Write text test \n");
+	
+	FONT_DrawString((uint8_t*)lcdBuffer, "Napis testowy", 63, 63, &Robo13p);
+	LCD_showBuffer(lcdBuffer);
+	
+	/*
 	int x;
 	int y;
 	
@@ -507,7 +516,7 @@ void LCD_init(void)
 		LCD_fill( lcdBuffer, setColor( 0x00, 0x00, 0xFF ) );
 		DELAY(100000);
 	}
-*/
+	*/
 	
 	/*
 	uprintf("Test Spi multiple send \n");
@@ -555,25 +564,28 @@ void LCD_init(void)
 }
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
-{   
+{   	
+	char buff[100];
+	int error = 0;
+	
 	LCD_LOCK(lcd_sc);
+	
 
-	uint16_t color = 0;	
-	uint8_t buff[6];
-
-	uprintf("lcd write \n");	
-
-	copyin(uio->uio_iov->iov_base,
+	error = copyin(uio->uio_iov->iov_base,
 			buff,
 			MIN( uio->uio_iov->iov_len, 6 ) );
 	
-	color = buff[0] | ( (uint16_t)buff[1] << 8 );
+	if ( error != 0 )
+	{
+		uprintf("Invalid argument\n");
+		LCD_UNLOCK(lcd_sc);
+		return (error);
+	}
 	
-	uprintf("Set color to: %d\n", color );
+	uprintf("Write to LCD: %s\n", buff );
 
-	LCD_fill( lcdBuffer, color  );
-
-    	LCD_UNLOCK(lcd_sc);    
-    	return 0;
+    LCD_UNLOCK(lcd_sc);    
+	
+    return 0;
 }
 
