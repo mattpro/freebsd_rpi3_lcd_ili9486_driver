@@ -546,25 +546,28 @@ void LCD_init(void)
 }
 
 static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
-{   
+{   	
+	char buff[100];
+	int error = 0;
+	
 	LCD_LOCK(lcd_sc);
+	
 
-	uint16_t color = 0;	
-	uint8_t buff[6];
-
-	uprintf("lcd write \n");	
-
-	copyin(uio->uio_iov->iov_base,
+	error = copyin(uio->uio_iov->iov_base,
 			buff,
 			MIN( uio->uio_iov->iov_len, 6 ) );
 	
-	color = buff[0] | ( (uint16_t)buff[1] << 8 );
+	if ( error != 0 )
+	{
+		uprintf("Invalid argument\n");
+		LCD_UNLOCK(lcd_sc);
+		return (error);
+	}
 	
-	uprintf("Set color to: %d\n", color );
+	uprintf("Write to LCD: %s\n", buff );
 
-	LCD_fill( lcdBuffer, color  );
-
-    	LCD_UNLOCK(lcd_sc);    
-    	return 0;
+    LCD_UNLOCK(lcd_sc);    
+	
+    return 0;
 }
 
