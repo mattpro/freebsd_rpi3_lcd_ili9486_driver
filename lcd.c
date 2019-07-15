@@ -19,9 +19,11 @@
 #include <dev/ofw/ofw_bus_subr.h>
 #include <dev/ofw/openfirm.h>
 
+
 #include "spibus_if.h"
 #include "gpio_if.h"
 
+#include "myFont.h"
 #include "lcd.h"
 
  
@@ -455,7 +457,12 @@ void LCD_init(void)
 
 	LCD_setRotation(0);
 	
-
+	
+	uprintf("Write text test \n");
+	
+	FONT_DrawStringHCenter(lcdBuffer, "Napis testowy", 120, 63, &Robo13p);
+	
+	/*
 	int x;
 	int y;
 	
@@ -498,7 +505,7 @@ void LCD_init(void)
 		LCD_fill( lcdBuffer, setColor( 0x00, 0x00, 0xFF ) );
 		DELAY(100000);
 	}
-
+	*/
 	
 	/*
 	uprintf("Test Spi multiple send \n");
