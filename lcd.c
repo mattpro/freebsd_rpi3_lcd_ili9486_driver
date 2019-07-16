@@ -99,7 +99,7 @@ static int lcd_attach(device_t dev )
 		lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
 	//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
 		LCD_init();   
-	
+	}
     lcd_sc->cdev_p = make_dev( &lcd_cdevsw, 
 				device_get_unit(dev),
 				UID_ROOT,
