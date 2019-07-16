@@ -68,8 +68,7 @@ svnlite checkout https://svn.freebsd.org/base/releng/12.0/sys /usr/src/sys
 ```
 
 ## 5. Other
-As default I use Roboto 13p Font, but You can use any font You need. Font can be converted to c files by using font converter:
-![Font converter](https://downloads.riuson.com/lcd-image-converter/lcd-image-converter-20180211-beta.zip/preview)
+As default I use Roboto 13p Font, but You can use any font You need. Font can be converted to c files by using font converter: [Font converter](https://downloads.riuson.com/lcd-image-converter/lcd-image-converter-20180211-beta.zip/preview)
 And change font in function lcd_write to other font:
 ```
 FONT_DrawString((uint8_t*)lcdBuffer, buff, 10, 10, &Robo13p);
@@ -78,5 +77,3 @@ to
 ```
 FONT_DrawString((uint8_t*)lcdBuffer, buff, 10, 10, &myFont);
 ```
-
-
