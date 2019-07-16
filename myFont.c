@@ -156,16 +156,7 @@ static int Font_Utf8NextChar(const char *str, int32_t start, uint32_t *resultCod
     }
     return (result);
 }
-/*
 
-static int strlen(const char *str)
-{
-        const char *s;
-
-        for (s = str; *s; ++s) ;
-        return (s - str);
-}
-*/
 
 int32_t FONT_TextWidth(const char *str, const tFont *font)
 {
@@ -194,11 +185,13 @@ int32_t FONT_TextWidth(const char *str, const tFont *font)
 	return totalWidth;
 }
 
+
 void FONT_DrawStringHCenter(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, const tFont *font)
 {
 	int32_t x0 = x - FONT_TextWidth(str,font)/2;
 	FONT_DrawString(buffer,str,x0,y,font);
 }
+
 
 void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, const tFont *font)
 {
@@ -228,8 +221,9 @@ void FONT_DrawString(uint8_t *buffer, const char *str, uint32_t x, uint32_t y, c
         }
         index = nextIndex;
         if (nextIndex < 0)
-	{
+		{
             break;
-	}
+		}
     }
 }
+

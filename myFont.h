@@ -1,7 +1,6 @@
 #ifndef __MYFONT
 #define __MYFONT
 
-
 typedef struct
 {
     const unsigned char *data;

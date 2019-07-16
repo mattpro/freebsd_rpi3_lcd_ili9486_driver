@@ -32,10 +32,8 @@ struct lcd_sc_t 		*lcd_sc;
 static devclass_t 		lcd_devclass; 
 static d_write_t 		lcd_write;
 
-uint16_t lcdBuffer[LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT];
-
-
 /* Zmienne dotyczace LCD */
+uint16_t lcdBuffer[LCD_SCREEN_WIDTH * LCD_SCREEN_HEIGHT];
 volatile uint16_t LCD_HEIGHT = LCD_SCREEN_HEIGHT;
 volatile uint16_t LCD_WIDTH  = LCD_SCREEN_WIDTH;
 
@@ -66,7 +64,6 @@ static struct cdevsw lcd_cdevsw = {
 /* Register LCD Newbus driver */
 DRIVER_MODULE(lcdRpi, spibus, lcd_driver, lcd_devclass, NULL, NULL);
 
-
 /* Adds LCD to SPI bus. */
 static int lcd_probe(device_t dev)
 {
@@ -84,79 +81,32 @@ static int lcd_probe(device_t dev)
 		return (BUS_PROBE_DEFAULT);
 	}
   
-      //  else if( ofw_bus_is_compatible(dev, "mattpro,touch") )
-      //  {
-      //          uprintf("Znaleziono TOUCH na szynie SPI \n");
-      //          device_set_desc(dev, "LCD MattPro");
-      //          return (BUS_PROBE_DEFAULT);
-     // 	}
-
   	return (ENXIO);
 }
 
-void lcd_task( void *arg);
 
-void lcd_task( void *arg )
-{
-	for(;;)
-	{
-		LCD_fill(lcdBuffer, setColor(0,0,0) );
-		DELAY(10000);
-		LCD_fill(lcdBuffer, setColor(0xff,0,0) );
-		DELAY(10000);
-	}
 
-} 
-
-static void lcd_delayed_attach(void *xsc);
 
 
 static int lcd_attach(device_t dev )
 { 
     uprintf("LCD attach \n");	
 
-//    config_intrhook_oneshot( lcd_delayed_attach, sc );	
-	
- //   lcd_sc = device_get_softc(dev);
     if( ofw_bus_is_compatible(dev, "mattpro,lcd") )
     {
-	uprintf("Attach LCD\n");
-	lcd_sc->devLcd = dev;
-	lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
-//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
-	LCD_init();   
- }
-//    else if ( ofw_bus_is_compatible(dev, "mattpro,touch") )
-//    {
-//	uprintf("Attach Touch\n");
-//	lcd_sc->devTouch = dev;
- //   }
-
-    lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
-//    if (lcd_sc->dev_gpio == NULL)
-//    {
-//		device_printf(lcd_sc->devLcd, "[LCD] Error: failed to get the GPIO dev\n");
-//		return (1);
-//    }
-//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
-//    LCD_init();
-
+		uprintf("Attach LCD\n");
+		lcd_sc->devLcd = dev;
+		lcd_sc->dev_gpio = devclass_get_device(devclass_find("gpio"), 0);
+	//    mtx_init(&lcd_sc->mtx, device_get_nameunit(lcd_sc->devLcd), "LCD Mutex", MTX_DEF);
+		LCD_init();   
+	
     lcd_sc->cdev_p = make_dev( &lcd_cdevsw, 
 				device_get_unit(dev),
 				UID_ROOT,
 				GID_WHEEL,
 				0600, "lcdMattPro");
 
-
-//    kproc_create( &lcd_task, lcd_sc, &lcd_sc->p, 0, 0, "task");
-
     return(0);
-}
-
-
-static void lcd_delayed_attach( void *xsc)
-{
-	uprintf("Delay attach");
 }
 
 
@@ -167,11 +117,11 @@ static int lcd_detach(device_t dev)
     return(0);
 }
 
+
 static int lcd_shutdown(device_t dev)
 {
     return(lcd_detach(dev));
 }
-
 
 
 /* LCD CONTROL */
@@ -206,7 +156,6 @@ void LCD_writeCommand(uint8_t command)
 {
 	PIN_RESET(LCD_DC);
 	LCD_spiSendByte(command);
-	PIN_SET(LCD_DC);
 }
 
 /* Send Data (char) to LCD */
@@ -301,7 +250,7 @@ void LCD_drawPixel(uint16_t X,uint16_t Y,uint16_t colour)
 
 	LCD_writeCommand(0x2C); // Memory write
 							
-	LCD_writeData( (uint8_t)(colour >> 8) ); // maluj kolor
+	LCD_writeData( (uint8_t)(colour >> 8) ); // set color
 	LCD_writeData( (uint8_t)(colour) );		
 }
 
@@ -373,10 +322,12 @@ void LCD_showBuffer(uint16_t* buffer)
 	}
 }
 
+
 void LCD_clear(uint16_t* buffer)
 { 
 	LCD_fill(buffer, 0x0000);
 }
+	
 	
 void LCD_bufferClear(uint16_t* buffer)
 { 
@@ -384,29 +335,16 @@ void LCD_bufferClear(uint16_t* buffer)
 }
 
 
-
 void LCD_init(void)
 {
 	volatile int i;
 	
 	uprintf("LCD init start ... \n");
-	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);	
+	//GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LED_PIN_NUMBER, GPIO_PIN_OUTPUT);	
 	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_DC_PIN_NUMBER, GPIO_PIN_OUTPUT);
 	GPIO_PIN_SETFLAGS( lcd_sc->dev_gpio, LCD_RST_PIN_NUMBER, GPIO_PIN_OUTPUT); 
-
 	
-	// only for test 
-	for( i = 0 ; i < 10 ; i ++ )
-	{
-		GPIO_PIN_TOGGLE(lcd_sc->dev_gpio, LED_PIN_NUMBER);
-		//lcd_send(i);
-		DELAY(50000);
-	}
-
 	LCD_reset();
-
-//	LCD_writeCommand(0x01); // Soft Reset
-//	DELAY(150000);			// 15 ms wait
 
 	LCD_writeCommand(0x28); // Display OFF
 
@@ -468,17 +406,17 @@ void LCD_init(void)
 	LCD_writeCommand(0x29); // Display ON
 	DELAY(150000);
 
-	LCD_setRotation(3);
+	LCD_setRotation(SCREEN_HORIZONTAL_2);
 	LCD_clear(lcdBuffer);
 	LCD_showBuffer(lcdBuffer);
 		
 	/*
+	// ROZNE TESTY //
 	uprintf("Write text test \n");
 	
 	FONT_DrawString((uint8_t*)lcdBuffer, "Napis testowy", 63, 63, &Robo13p);
 	LCD_showBuffer(lcdBuffer);
-	*/
-	/*
+
 	int x;
 	int y;
 	
@@ -492,8 +430,6 @@ void LCD_init(void)
 			LCD_drawPixel( x+100, y, setColor( 0x00, 0x00, 0xFF ) );
 		}
 	} 
-
-
 
 	uprintf("Writre buffer test\n");
 
@@ -510,7 +446,6 @@ void LCD_init(void)
 		LCD_showBuffer(lcdBuffer);
 	}
 
-
 	uprintf("Fill LCD test\n");
 	int o;
 	for ( o = 0 ; o < 10 ; o ++ )
@@ -522,9 +457,7 @@ void LCD_init(void)
 		LCD_fill( lcdBuffer, setColor( 0x00, 0x00, 0xFF ) );
 		DELAY(100000);
 	}
-	*/
 	
-	/*
 	uprintf("Test Spi multiple send \n");
 	uint8_t txData[10];
 	uint8_t rxData[10];
@@ -574,7 +507,6 @@ static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 	char buff[1000];
 	int error = 0;
 
-	
 	LCD_LOCK(lcd_sc);
 
 	memset(buff, 0 , sizeof(buff));
@@ -592,11 +524,11 @@ static int lcd_write(struct cdev *dev, struct uio *uio, int ioflag)
 	uprintf("Write to LCD: %s\n", buff );
 	
 	LCD_clear(lcdBuffer);
-        FONT_DrawString((uint8_t*)lcdBuffer, buff, 10, 10, &Robo13p);
+    FONT_DrawString((uint8_t*)lcdBuffer, buff, 10, 10, &Robo13p);
         
 	LCD_showBuffer(lcdBuffer);
-    	LCD_UNLOCK(lcd_sc);    
+    LCD_UNLOCK(lcd_sc);    
 	
-    	return 0;
+    return 0;
 }
 

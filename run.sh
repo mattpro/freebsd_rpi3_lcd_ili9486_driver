@@ -1,8 +1,7 @@
 # usr/local/bin/bash
 
-
 make
-rm .depend.Roboto13p.o .depend.lcd.o .depend.myFont.o myFont.o lcd.o Roboto13p.o
+rm .depend.Roboto13p.o .depend.lcd.o .depend.myFont.o myFont.o lcd.o Roboto13p.o lcd.kld
 kldunload lcd
 kldload ./lcd.ko
-echo "Renaming a file also doesn't give you any context as to what changes were made or who they were made by. When multiple team members edit the same file, overwriting may occur and it becomes difficult to keep up with the latest file version. To jest jakis bardzo dlugi testowy napis ktory wrucamy na lcd. wyswietlacz ILI9486 + rezystancyjny touch panel" > /dev/lcdMattPro
+echo "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." > /dev/lcdMattPro

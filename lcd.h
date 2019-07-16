@@ -8,7 +8,7 @@
 #define LCD_SCREEN_HEIGHT 		320 
 #define LCD_SCREEN_WIDTH 		480
 
-// Settings
+// Other define
 #define SCREEN_VERTICAL_1		0
 #define SCREEN_HORIZONTAL_1		1
 #define SCREEN_VERTICAL_2		2
